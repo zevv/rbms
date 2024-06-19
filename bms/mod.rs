@@ -33,11 +33,12 @@ pub fn bms() {
     //let plat = Box::new(plat::bms::linux::Linux{ value: 42 });
     let mut plat = plat::bms::linux::new(&mut devmgr);
     _ = plat.init(&mut devmgr);
+    _ = devmgr.init();
 
-    plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n");
+    _ = plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n");
+    _ = plat.devs().gpio.backlight.borrow_mut().set(true);
 
-    plat.devs().gpio.backlight.borrow_mut().set(true);
-
+    _ = devmgr.dump();
 
     // print typeof of plat
 }

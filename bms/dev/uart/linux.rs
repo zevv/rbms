@@ -33,6 +33,12 @@ impl Linux {
 
 
 impl Dev for Linux {
+
+    // TODO: super?
+    fn kind(&self) -> super::super::Kind {
+        super::super::Kind::Uart
+    }
+
     fn init(&mut self) -> Result<(), Rv> {
 
         match open(self.dev, OFlag::O_RDWR | OFlag::O_NOCTTY, Mode::empty()) {
@@ -42,8 +48,8 @@ impl Dev for Linux {
 
         let _tios = tcgetattr(self.fd);
 
-        println!("Drv::Linux::init() fd={}", self.fd);
         self.flap();
+        println!("dev::uart::Linux.init() fd={}", self.fd);
         Ok(())
     }
 }

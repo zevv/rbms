@@ -2,7 +2,7 @@
 use std::fmt;
 
 pub enum Rv {
-        //Ok,          /* No error */
+        Ok,          /* No error */
         //ErrNoent,    /* Not found */
         ErrIo,       /* I/O error */
         //ErrNodev,    /* No such device */
@@ -22,7 +22,7 @@ pub enum Rv {
 impl fmt::Display for Rv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
        match *self {
-           //Rv::Ok => write!(f, "Ok"),
+           Rv::Ok => write!(f, "Ok"),
            //Rv::ErrNoent => write!(f, "ErrNoent"),
            Rv::ErrIo => write!(f, "ErrIo"),
            Rv::ErrImpl => write!(f, "ErrImpl"),

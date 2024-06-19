@@ -17,14 +17,21 @@ pub fn new(pin: u32) -> Rc<RefCell<dyn Gpio>> {
 }
 
 impl Dev for Dummy {
+
+    // TODO: super?
+    fn kind(&self) -> super::super::Kind {
+        super::super::Kind::Gpio
+    }
+
     fn init(&mut self) -> Result<(), Rv> {
+        println!("dev::gpio::Dummy.init({})", self.pin);
         Err(Rv::ErrImpl)
     }
 }
 
 impl Gpio for Dummy {
     fn set(&self, val: bool) -> Result<(), Rv> {
-        println!("Dummy::set({}) : {}", self.pin, val);
+        println!("dev::gpio::Dummy.set({}) : {}", self.pin, val);
         Ok(())
     }
 }

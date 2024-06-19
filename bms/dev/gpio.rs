@@ -10,3 +10,6 @@ pub trait Gpio : Dev {
     fn set(&self, val: bool) -> Result<(), Rv>;
 
 }
+
+
+
