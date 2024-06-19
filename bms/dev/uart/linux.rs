@@ -1,5 +1,7 @@
 
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use super::super::Dev;
 use super::Uart;
 use crate::bms::rv::*;
@@ -16,11 +18,11 @@ pub struct Linux {
     fd: i32,
 }
 
-pub fn new(dev: &'static str) -> Box<dyn Uart> {
-    Box::new(Linux {
+pub fn new(dev: &'static str) -> Rc<RefCell<dyn Uart>> {
+    Rc::new(RefCell::new(Linux {
         dev: dev,
         fd: -1,
-    })
+    }))
 }
 
 

@@ -1,5 +1,7 @@
 
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use super::super::Dev;
 use super::Gpio;
 use crate::bms::rv::*;
@@ -8,10 +10,10 @@ pub struct Dummy {
     pin: u32,
 }
 
-pub fn new(pin: u32) -> Box::<dyn Gpio> {
-    Box::new(Dummy {
+pub fn new(pin: u32) -> Rc<RefCell<dyn Gpio>> {
+    Rc::new(RefCell::new(Dummy {
         pin: pin,
-    })
+    }))
 }
 
 impl Dev for Dummy {

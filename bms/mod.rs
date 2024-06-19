@@ -34,9 +34,9 @@ pub fn bms() {
     let mut plat = plat::bms::linux::new(&mut devmgr);
     _ = plat.init(&mut devmgr);
 
-    plat.devs().uart.uart0.write(b"=== Hello, world! ===\n");
+    plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n");
 
-    plat.devs().gpio.backlight.set(true);
+    plat.devs().gpio.backlight.borrow_mut().set(true);
 
 
     // print typeof of plat

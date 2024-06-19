@@ -30,6 +30,9 @@ pub fn new(devmgr: &mut dev::Devmgr) -> Box::<dyn Bms> {
 
     });
 
+    //let tmp = plat.devs.gpio.backlight;
+
+
     // TODO
     //devmgr.add(&*plat.devs.uart.uart0);
 
@@ -40,7 +43,7 @@ pub fn new(devmgr: &mut dev::Devmgr) -> Box::<dyn Bms> {
 impl Plat for Linux {
     fn init(&mut self, _devmgr: &mut Devmgr) -> Result<(), Rv> {
 
-        let res = self.devs.uart.uart0.init();
+        let res = self.devs.uart.uart0.borrow_mut().init();
         match res {
             Ok(_) => {},
             Err(e) => {
