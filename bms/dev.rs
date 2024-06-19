@@ -44,7 +44,7 @@ impl Devmgr {
         };
         self.dev.push(di);
     }
-
+    
     pub fn init(&mut self) -> Result<(), Rv> {
         println!("devmgr.init()");
         for di in self.dev.iter_mut() {

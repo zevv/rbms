@@ -37,6 +37,7 @@ pub fn bms() {
 
     _ = plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n");
     _ = plat.devs().gpio.backlight.borrow_mut().set(true);
+    _ = plat.devs().gpio.charge.borrow_mut().get();
 
     _ = devmgr.dump();
 

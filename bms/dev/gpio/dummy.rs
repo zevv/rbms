@@ -34,6 +34,11 @@ impl Gpio for Dummy {
         println!("dev::gpio::Dummy.set({}) : {}", self.pin, val);
         Ok(())
     }
+
+    fn get(&self) -> Result<bool, Rv> {
+        println!("dev::gpio::Dummy.get({})", self.pin);
+        Ok(false)
+    }
 }
 
 
