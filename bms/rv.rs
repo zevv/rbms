@@ -1,6 +1,7 @@
 
 use std::fmt;
 
+#[derive(Debug, PartialEq)]
 pub enum Rv {
         Ok,          /* No error */
         //ErrNoent,    /* Not found */
@@ -10,7 +11,7 @@ pub enum Rv {
         //ErrTimeout,  /* Timeout */
         //ErrBusy,     /* Busy */
         //ErrInval,    /* Invalid argument */
-        //ErrNotready, /* Not ready */
+        ErrNotready, /* Not ready */
         //ErrNospc,    /* No space left */
         //ErrProto,    /* Protocol error */
         //ErrNomem,    /* Out of memory */
@@ -21,12 +22,7 @@ pub enum Rv {
 
 impl fmt::Display for Rv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-       match *self {
-           Rv::Ok => write!(f, "Ok"),
-           //Rv::ErrNoent => write!(f, "ErrNoent"),
-           Rv::ErrIo => write!(f, "ErrIo"),
-           Rv::ErrImpl => write!(f, "ErrImpl"),
-       }
+        write!(f, "{:?}", self)
     }
 }
 

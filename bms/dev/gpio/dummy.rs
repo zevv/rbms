@@ -2,9 +2,11 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
-use super::super::Dev;
-use super::Gpio;
-use crate::bms::rv::*;
+
+use crate::bms::rv::Rv;
+use crate::bms::dev;
+use crate::bms::dev::Dev;
+use crate::bms::dev::gpio::Gpio;
 
 pub struct Dummy {
     pin: u32,
@@ -18,9 +20,8 @@ pub fn new(pin: u32) -> Rc<RefCell<dyn Gpio>> {
 
 impl Dev for Dummy {
 
-    // TODO: super?
-    fn kind(&self) -> super::super::Kind {
-        super::super::Kind::Gpio
+    fn kind(&self) -> dev::Kind {
+        dev::Kind::Gpio
     }
 
     fn init(&mut self) -> Result<(), Rv> {

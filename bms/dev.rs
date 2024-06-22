@@ -31,26 +31,42 @@ pub struct Devmgr {
 
 
 impl Devmgr {
+
     pub fn new() -> Devmgr {
         Devmgr {
             dev: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, dev: Rc<RefCell<dyn Dev>>) {
+    // Register device to the device manager.
+    pub fn add(&mut self, dev: Rc<RefCell<dyn Dev>>) -> Rc<RefCell<dyn Dev>> {
         let di = DevInfo {
-            dev: dev,
-            status: Rv::Ok,
+            dev: dev.clone(),
+            status: Rv::ErrNotready,
         };
         self.dev.push(di);
+        dev
     }
-    
+
+    // Initialize all devices. A device might not be able to initialize because it depends on other
+    // devices; it this case it returns ErrNotready. For sake of simplicity, just attempt to
+    // initialize all devices in a loop until all are ready instead of mainaining a tree of
+    // dependencies.
     pub fn init(&mut self) -> Result<(), Rv> {
         println!("devmgr.init()");
-        for di in self.dev.iter_mut() {
-            match di.dev.borrow_mut().init() {
-                Ok(_) => { di.status = Rv::Ok; }
-                Err(e) => { di.status = e; }
+        for _ in 0..10 {
+            let mut some_not_ready = false;
+            for di in self.dev.iter_mut() {
+                match di.dev.borrow_mut().init() {
+                    Ok(_) => { di.status = Rv::Ok; },
+                    Err(e) => { di.status = e; }
+                }
+                if di.status == Rv::ErrNotready {
+                    some_not_ready = true;
+                }
+            }
+            if !some_not_ready {
+                break;
             }
         }
         Ok(())
@@ -63,3 +79,4 @@ impl Devmgr {
         Ok(())
     }
 }
+

@@ -17,7 +17,7 @@ use crate::bms::bms;
 //#[no_mangle]
 fn main() {
 
-    bms();
+    bms().expect("BMS failed");
 }
 
 

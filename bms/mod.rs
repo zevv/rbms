@@ -3,6 +3,7 @@
 pub mod dev;
 pub mod plat;
 pub mod rv;
+pub mod evq;
 
 //use core::fmt::{self, Write};
 
@@ -10,81 +11,34 @@ pub mod rv;
 //use crate::bms::plat::bms::Bms;
 
 
-//extern "C" {
-//    pub fn write(fd: i32, buf: *const u8, count: usize) -> isize;
-//}
 
-pub fn bms() {
+pub fn bms() -> Result<(), rv::Rv> {
+   
+    let evq = evq::Evq::new();
+    evq.lock().unwrap().init();
 
-    // drv::hello();
-    // let a = 42;
-    // let mut buf = [0u8; 128];
-    // let mut buf = ByteMutWriter::new(&mut buf[..]);
-    // buf.clear();
-    // write!(buf, "The answer is: {}\n", a).unwrap();
-    // unsafe {
-    //     let p = buf.as_str().as_ptr();
-    //     write(1, p, buf.len());
-    // }
-    //
-    
+    evq.lock().unwrap().register(evq::EvType::Tick10Hz as u8, |ev| {
+        println!("Tick10Hz");
+    });
+
     let mut devmgr = dev::Devmgr::new();
 
     //let plat = Box::new(plat::bms::linux::Linux{ value: 42 });
-    let mut plat = plat::bms::linux::new(&mut devmgr);
-    _ = plat.init(&mut devmgr);
-    _ = devmgr.init();
+    let mut plat = plat::bms::linux::new(&mut devmgr, evq.clone());
+    plat.init(&mut devmgr)?;
+    devmgr.init()?;
 
-    _ = plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n");
-    _ = plat.devs().gpio.backlight.borrow_mut().set(true);
-    _ = plat.devs().gpio.charge.borrow_mut().get();
+    plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n")?;
+    plat.devs().gpio.backlight.borrow_mut().set(true)?;
+    plat.devs().gpio.charge.borrow_mut().get()?;
 
-    _ = devmgr.dump();
+    devmgr.dump()?;
+
+    evq.lock().unwrap().push(evq::Event::Boot);
+    evq.lock().unwrap().run();
+
+    Ok(())
 
     // print typeof of plat
 }
 
-// pub struct ByteMutWriter<'a> {
-//     buf: &'a mut [u8],
-//     cursor: usize,
-// }
-// 
-// impl<'a> ByteMutWriter<'a> {
-//     pub fn new(buf: &'a mut [u8]) -> Self {
-//         ByteMutWriter { buf, cursor: 0 }
-//     }
-// 
-//     pub fn as_str(&self) -> &str {
-//         core::str::from_utf8(&self.buf[..self.cursor]).unwrap()
-//     }
-// 
-//     #[inline]
-//     pub fn capacity(&self) -> usize {
-//         self.buf.len()
-//     }
-// 
-//     pub fn clear(&mut self) {
-//         self.cursor = 0;
-//     }
-// 
-//     pub fn len(&self) -> usize {
-//         self.cursor
-//     }
-// 
-// }
-// 
-// impl fmt::Write for ByteMutWriter<'_> {
-//     fn write_str(&mut self, s: &str) -> fmt::Result {
-//         let cap = self.capacity();
-//         for (i, &b) in self.buf[self.cursor..cap]
-//             .iter_mut()
-//             .zip(s.as_bytes().iter())
-//         {
-//             *i = b;
-//         }
-//         self.cursor = usize::min(cap, self.cursor + s.as_bytes().len());
-//         Ok(())
-//     }
-// 
-// }
-// 
