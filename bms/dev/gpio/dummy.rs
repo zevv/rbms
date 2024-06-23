@@ -21,7 +21,6 @@ pub fn new(_: &Evq, pin: u8) -> &'static dyn Gpio {
 
 impl Dev for Dummy {
     fn init(&'static self) -> Rv {
-        println!("Init pin {}", self.pin);
         Rv::Ok
     }
 

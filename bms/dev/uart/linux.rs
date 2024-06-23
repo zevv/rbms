@@ -81,17 +81,9 @@ impl Uart for Linux {
 
     // Write data to the uart
     fn write(&self, data: &[u8]) {
-        let mut dd = self.dd.lock().unwrap();
-         match write(dd.fd, data) {
-            Ok(n) => {
-                // On success, update the stats
-                dd.stats.bytes_tx += n as u32;
-            }
-            Err(e) => {
-                println!("Failed to write: {:?}", e);
-            }
-        }
-
+        let fd = self.dd.lock().unwrap().fd;
+        let n = write(fd, data).unwrap();
+        self.dd.lock().unwrap().stats.bytes_tx += n as u32;
     }
 
     fn get_stats(&self) -> Stats {
