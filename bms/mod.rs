@@ -25,7 +25,8 @@ pub fn bms() {
     evq.reg(|e| {
         match e {
             Event::Tick1Hz => {
-                println!("1Hz");
+                let stats = plat.devs().uart.uart0.get_stats();
+                println!("uart: {:?}", stats);
             }
             _ => {
                 println!("Other event");

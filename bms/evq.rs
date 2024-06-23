@@ -8,17 +8,21 @@ pub enum Event {
     Tick1Hz,
     //Tick10Hz,
     Uart { 
-        //TODO dev: &'static dev::uart::Uart,Tu
+        //dev: &'static dev::uart::Uart,
         data: [u8; 8],
         len: u8,
     },
 }
 
 
+struct Handler {
+    cb: Box<dyn Fn(&Event)>,
+}
+
 pub struct Evq {
     rx: Receiver<Event>,
     tx: SyncSender<Event>,
-    handlers: RefCell<Vec<fn(&Event)>>,
+    handlers: RefCell<Vec<Handler>>,
 }
 
 impl Evq {
@@ -32,15 +36,20 @@ impl Evq {
         }));
     }
 
-    pub fn reg(&self, cb: fn(&Event)) {
-        self.handlers.borrow_mut().push(cb);
+    pub fn reg<F>(&self, cb: F) 
+        where F: Fn(&Event) + 'static
+    {
+        let mut handlers = self.handlers.borrow_mut();
+        handlers.push(Handler { cb: Box::new(cb) });
+        
     }
     
     pub fn run(&self) {
         loop {
             let event = self.rx.recv().unwrap();
-            for h in self.handlers.borrow().iter() {
-                h(&event);
+            for handler in self.handlers.borrow().iter() {
+                (handler.cb)(&event);
+                
             }
         }
     }
