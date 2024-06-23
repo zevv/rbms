@@ -8,7 +8,7 @@ pub enum Event {
     Tick1Hz,
     //Tick10Hz,
     Uart { 
-        dev: &'static dev::uart::Uart,
+        //TODO dev: &'static dev::uart::Uart,Tu
         data: [u8; 8],
         len: u8,
     },

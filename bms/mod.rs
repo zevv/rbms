@@ -27,8 +27,8 @@ pub fn bms() {
             Event::Tick1Hz => {
                 println!("1Hz");
             }
-            Event::Uart { data, len } => {
-                println!("Uart {:?} {}", data, len);
+            _ => {
+                println!("Other event");
             }
         }
     });
