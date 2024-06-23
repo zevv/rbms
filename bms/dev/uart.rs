@@ -1,8 +1,6 @@
 
 pub mod linux;
 
-use std::fmt;
-
 use super::Dev;
 use super::Kind;
 
@@ -15,14 +13,13 @@ pub struct Stats {
 pub trait Uart : Dev {
     fn write(&self, data: &[u8]);
     fn get_stats(&self) -> Stats;
-    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
 }
 
 
-impl fmt::Display for dyn Uart + Send + Sync {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        return self.display(f)
-    }
-}
+//impl fmt::Debug for dyn Uart + Send + Sync {
+//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        return self.display(f)
+//    }
+//}
 
 

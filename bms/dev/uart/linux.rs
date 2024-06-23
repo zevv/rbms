@@ -27,7 +27,7 @@ struct Linux {
 }
 
 
-pub fn new(evq: &Evq, path: &'static str) -> &'static dyn Uart {
+pub fn new(evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
     return Box::leak(Box::new(Linux {
         path: path,
         sender: evq.sender(),
@@ -75,6 +75,10 @@ impl Dev for Linux {
     fn kind(&self) -> super::Kind {
         return super::Kind::Uart;
     }
+    
+    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "linux@{}", self.path)
+    }
 }
 
 impl Uart for Linux {
@@ -91,9 +95,6 @@ impl Uart for Linux {
         return dd.stats;
     }
 
-    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "linux@{}", self.path)
-    }
 }
 
 

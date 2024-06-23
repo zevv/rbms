@@ -5,13 +5,13 @@ use super::Plat;
 use crate::bms::dev;
 
 pub struct Gpio {
-    pub backlight: &'static dyn dev::gpio::Gpio,
-    pub charge: &'static dyn dev::gpio::Gpio,
-    pub discharge: &'static dyn dev::gpio::Gpio,
+    pub backlight: &'static (dyn dev::gpio::Gpio + Sync),
+    pub charge: &'static (dyn dev::gpio::Gpio + Sync),
+    pub discharge: &'static (dyn dev::gpio::Gpio + Sync),
 }
 
 pub struct Uart {
-    pub uart0: &'static dyn dev::uart::Uart,
+    pub uart0: &'static (dyn dev::uart::Uart + Sync),
 }
     
 pub struct Devices {

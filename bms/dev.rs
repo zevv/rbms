@@ -2,6 +2,7 @@
 pub mod uart;
 pub mod gpio;
 
+use std::fmt;
 use crate::bms::rv::Rv;
 
 #[derive(Debug)]
@@ -13,10 +14,11 @@ pub enum Kind {
 pub trait Dev {
     fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
+    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
 }
 
 struct DevInfo {
-    dev: &'static dyn Dev,
+    dev: &'static (dyn Dev + Sync),
     status: Rv,
 }
 
@@ -31,7 +33,7 @@ impl Mgr {
         }
     }
 
-    pub fn add(&mut self, dev: &'static dyn Dev) {
+    pub fn add(&mut self, dev: &'static (dyn Dev + Sync)) {
         self.devs.push(DevInfo {
             dev: dev,
             status: Rv::ErrNotReady,
@@ -45,9 +47,23 @@ impl Mgr {
     }
 
     pub fn dump(&self) {
+        println!("devices:");
         for di in self.devs.iter() {
-            println!("Dev: {:?} {:?}", di.dev.kind(), di.status);
+            println!("- {:?}: {:?}: {:?}", di.dev.kind(), di.dev, di.status);
         }
     }
 }
 
+
+impl fmt::Debug for (dyn Dev + Sync) {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        return self.display(f);
+
+    }
+}
+
+//impl fmt::Display for dyn Uart + Send + Sync {
+//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//        return self.display(f);
+//    }
+//}

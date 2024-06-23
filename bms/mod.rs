@@ -19,9 +19,9 @@ pub fn bms() {
     devmgr.init();
     devmgr.dump();
 
-    plat.devs().uart.uart0.write("=== Hello\n".as_bytes());
+    plat.devs().uart.uart0.write(b"=== Hello ===\n");
     plat.devs().gpio.backlight.set(false);
-
+    
     evq.reg(|e| {
         match e {
             Event::Tick1Hz => {
@@ -29,7 +29,7 @@ pub fn bms() {
                 println!("{:?}", plat.devs().uart.uart0.get_stats());
             }
             Event::Uart { dev, data, len } => {
-                println!("event: Uart({}) len={}, data={:?}", dev, len, data);
+                println!("event: Uart dev={:?} len={:?}, data={:?}", *dev as &(dyn dev::Dev + Sync), len, data);
             }
         }
     });
