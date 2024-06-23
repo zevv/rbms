@@ -13,14 +13,20 @@ pub fn bms() {
     let evq = evq::Evq::new();
     let mut devmgr = dev::Mgr::new();
 
+    #[cfg(feature = "linux")]
     let plat: &'static dyn plat::bms::Bms = plat::bms::linux::new(evq, &mut devmgr);
+    
+    #[cfg(feature = "nowos")]
+    let plat: &'static dyn plat::bms::Bms = plat::bms::nowos::new(evq, &mut devmgr);
+
+
     plat.init();
 
     devmgr.init();
     devmgr.dump();
 
     plat.devs().uart.uart0.write(b"=== Hello ===\n");
-    plat.devs().gpio.backlight.set(false);
+    plat.devs().gpio.backlight.set(true);
     
     evq.reg(|e| {
         match e {

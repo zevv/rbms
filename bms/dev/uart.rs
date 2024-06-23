@@ -2,6 +2,9 @@
 #[cfg(feature = "linux")]
 pub mod linux;
 
+#[cfg(feature = "esp32")]
+pub mod esp32;
+
 use super::Dev;
 use super::Kind;
 

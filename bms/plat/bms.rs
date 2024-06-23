@@ -1,5 +1,9 @@
 
+#[cfg(feature = "linux")]
 pub mod linux;
+
+#[cfg(feature = "nowos")]
+pub mod nowos;
 
 use super::Plat;
 use crate::bms::dev;
