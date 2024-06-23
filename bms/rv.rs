@@ -4,14 +4,14 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum Rv {
         Ok,          /* No error */
-        //ErrNoent,    /* Not found */
         ErrIo,       /* I/O error */
-        //ErrNodev,    /* No such device */
         ErrImpl,     /* Not implemented */
+        ErrNotReady, /* Not ready */
+        //ErrNoent,    /* Not found */
+        //ErrNodev,    /* No such device */
         //ErrTimeout,  /* Timeout */
         //ErrBusy,     /* Busy */
         //ErrInval,    /* Invalid argument */
-        ErrNotready, /* Not ready */
         //ErrNospc,    /* No space left */
         //ErrProto,    /* Protocol error */
         //ErrNomem,    /* Out of memory */

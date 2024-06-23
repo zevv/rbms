@@ -1,12 +1,8 @@
 
-
-
-pub mod gpio;
 pub mod uart;
+pub mod gpio;
 
-use std::rc::Rc;
-use std::cell::RefCell;
-use super::rv::*;
+use crate::bms::rv::Rv;
 
 #[derive(Debug)]
 pub enum Kind {
@@ -15,68 +11,43 @@ pub enum Kind {
 }
 
 pub trait Dev {
-    fn init(&mut self) -> Result<(), Rv>;
+    fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
 }
 
-
 struct DevInfo {
-    dev: Rc<RefCell<dyn Dev>>,
+    dev: &'static dyn Dev,
     status: Rv,
 }
 
-pub struct Devmgr {
-    dev: Vec<DevInfo>
+pub struct Mgr {
+    devs: Vec<DevInfo>,
 }
 
-
-impl Devmgr {
-
-    pub fn new() -> Devmgr {
-        Devmgr {
-            dev: Vec::new(),
+impl Mgr {
+    pub fn new() -> Mgr {
+        Mgr {
+            devs: Vec::new(),
         }
     }
 
-    // Register device to the device manager.
-    pub fn add(&mut self, dev: Rc<RefCell<dyn Dev>>) -> Rc<RefCell<dyn Dev>> {
-        let di = DevInfo {
-            dev: dev.clone(),
-            status: Rv::ErrNotready,
-        };
-        self.dev.push(di);
-        dev
+    pub fn add(&mut self, dev: &'static dyn Dev) {
+        self.devs.push(DevInfo {
+            dev: dev,
+            status: Rv::ErrNotReady,
+        });
     }
 
-    // Initialize all devices. A device might not be able to initialize because it depends on other
-    // devices; it this case it returns ErrNotready. For sake of simplicity, just attempt to
-    // initialize all devices in a loop until all are ready instead of mainaining a tree of
-    // dependencies.
-    pub fn init(&mut self) -> Result<(), Rv> {
-        println!("devmgr.init()");
-        for _ in 0..10 {
-            let mut some_not_ready = false;
-            for di in self.dev.iter_mut() {
-                match di.dev.borrow_mut().init() {
-                    Ok(_) => { di.status = Rv::Ok; },
-                    Err(e) => { di.status = e; }
-                }
-                if di.status == Rv::ErrNotready {
-                    some_not_ready = true;
-                }
-            }
-            if !some_not_ready {
-                break;
-            }
+    pub fn init(&mut self) {
+        for di in self.devs.iter_mut() {
+            di.status = di.dev.init();
         }
-        Ok(())
     }
 
-    pub fn dump(&self) -> Result<(), Rv> {
-        for di in self.dev.iter() {
-            println!("  {:?}: {}", di.dev.borrow().kind(), di.status);
+    pub fn dump(&self) {
+        for di in self.devs.iter() {
+            println!("Dev: {:?} {:?}", di.dev.kind(), di.status);
         }
-        Ok(())
     }
 }
 

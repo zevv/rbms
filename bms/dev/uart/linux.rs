@@ -1,93 +1,57 @@
 
-
-use std::rc::Rc;
-use std::cell::RefCell;
+use super::Uart;
+use super::super::Dev;
 use std::thread;
+use std::sync::Mutex;
 use std::sync::mpsc::SyncSender;
-
-use nix::sys::stat::Mode;
-use nix::unistd::{write};
-use nix::sys::termios::{tcgetattr};
-
-use crate::bms::evq::Event;
-use crate::bms::rv::Rv;
-use crate::bms::dev;
-use crate::bms::dev::Dev;
-use crate::bms::dev::uart::Uart;
-
 use nix::fcntl::{OFlag, open};
+use nix::unistd::{write, read};
+use nix::sys::stat::Mode;
+use crate::bms::evq::Event;
+use crate::bms::evq::Evq;
+use crate::bms::rv::Rv;
 
-pub struct Linux {
-    dev: &'static str,
+struct Dd {
     fd: i32,
+}
+
+struct Linux {
+    dev: &'static str,
     sender: SyncSender<Event>,
+    dd: Mutex<Dd>,
 }
 
-pub fn new(sender: SyncSender<Event>, dev: &'static str) -> Rc<RefCell<dyn Uart>> {
-    Rc::new(RefCell::new(Linux {
+pub fn new(evq: &Evq, dev: &'static str) -> &'static dyn Uart {
+    return Box::leak(Box::new(Linux {
         dev: dev,
-        fd: -1,
-        sender: sender,
-    }))
+        sender: evq.sender(),
+        dd: Mutex::new(Dd { fd: 42 }),
+    }));
 }
-
-
-fn ticker(sender: SyncSender<Event>)
-{
-    //thread::spawn(|| {
-    //    loop {
-    //        thread::sleep(std::time::Duration::from_millis(1000));
-    //        sender.send(Event::Tick1Hz {});
-    //    }
-    //});
-}
-
-
-impl Linux {
-    pub fn flap(&mut self) {
-    }
-}
-
 
 impl Dev for Linux {
-
-    fn kind(&self) -> dev::Kind {
-        dev::Kind::Uart
-    }
-
-    fn init(&mut self) -> Result<(), Rv> {
-
-        match open(self.dev, OFlag::O_RDWR, Mode::empty()) {
-            Ok(fd) => { self.fd = fd; }
-            Err(_) => { return Err(Rv::ErrIo); }
-        }
-
-        let _tios = tcgetattr(self.fd);
-
-        self.flap();
-        println!("dev::uart::Linux.init() fd={}", self.fd);
-
-        let s = self.sender.clone();
-
+    fn init(&'static self) -> Rv {
+        let fd = open(self.dev, OFlag::O_RDWR, Mode::empty()).expect("Failed to open uart");
+        self.dd.lock().unwrap().fd = fd;
         thread::spawn(move || {
             loop {
-                thread::sleep(std::time::Duration::from_millis(1000));
-                s.send(Event::Tick10Hz {}).unwrap();
+                let mut data: [u8; 8] = [0; 8];
+                let len = read(fd, &mut data).expect("Failed to read");
+                let ev = Event::Uart { data: data, len: len as u8 };
+                self.sender.send(ev).unwrap();
             }
         });
+        Rv::Ok
+    }
 
-        Ok(())
+    fn kind(&self) -> super::Kind {
+        return super::Kind::Uart;
     }
 }
 
-
 impl Uart for Linux {
-
-    fn write(&self, val: &[u8]) -> Result<(), Rv> {
-        match write(self.fd, val) {
-            Ok(_) => { Ok(()) }
-            Err(_) => { return Err(Rv::ErrIo); }
-        }
+    fn write(&self, data: &[u8]) {
+         write(self.dd.lock().unwrap().fd, data);
     }
 }
 

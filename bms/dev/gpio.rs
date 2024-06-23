@@ -2,15 +2,9 @@
 pub mod dummy;
 
 use super::Dev;
-
-use crate::bms::rv::*;
+use crate::bms::rv::Rv;
 
 pub trait Gpio : Dev {
-
-    fn set(&self, val: bool) -> Result<(), Rv>;
-    fn get(&self) -> Result<bool, Rv>;
-
+    fn set(&self, state: bool) -> Rv;
 }
-
-
 

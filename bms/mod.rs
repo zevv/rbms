@@ -1,44 +1,50 @@
 
 
-pub mod dev;
-pub mod plat;
-pub mod rv;
 pub mod evq;
+pub mod rv;
+pub mod dev;
 
-//use core::fmt::{self, Write};
+use evq::Event;
 
-//use crate::bms::plat::Plat;
-//use crate::bms::plat::bms::Bms;
+pub fn bms() {
 
-
-
-pub fn bms() -> Result<(), rv::Rv> {
-   
     let evq = evq::Evq::new();
-    evq.lock().unwrap().init();
+    let mut mgr = dev::Mgr::new();
 
-    evq.lock().unwrap().register(evq::EvType::Tick10Hz as u8, |ev| {
-        println!("Tick10Hz");
+    let g = dev::gpio::dummy::new(evq, 1);
+    mgr.add(g);
+
+    let g2 = dev::gpio::dummy::new(evq, 2);
+    mgr.add(g2);
+
+    let uart = dev::uart::linux::new(evq, "/dev/stdout");
+    mgr.add(uart);
+
+    uart.write("=== Hello\n".as_bytes());
+
+    mgr.init();
+    mgr.dump();
+
+    let h = g;
+
+    g.set(false);
+    h.set(true);
+
+    evq.reg(|e| {
+        match e {
+            Event::Tick1Hz => {
+                println!("1Hz");
+            }
+            Event::Tick10Hz => {
+                println!("10Hz");
+            }
+            Event::Uart { data, len: _ } => {
+                println!("Uart {:?}", data);
+            }
+        }
     });
 
-    let mut devmgr = dev::Devmgr::new();
 
-    //let plat = Box::new(plat::bms::linux::Linux{ value: 42 });
-    let mut plat = plat::bms::linux::new(&mut devmgr, evq.clone());
-    plat.init(&mut devmgr)?;
-    devmgr.init()?;
-
-    plat.devs().uart.uart0.borrow().write(b"=== Hello, world! ===\n")?;
-    plat.devs().gpio.backlight.borrow_mut().set(true)?;
-    plat.devs().gpio.charge.borrow_mut().get()?;
-
-    devmgr.dump()?;
-
-    evq.lock().unwrap().push(evq::Event::Boot);
-    evq.lock().unwrap().run();
-
-    Ok(())
-
-    // print typeof of plat
+    evq.run();
 }
 
