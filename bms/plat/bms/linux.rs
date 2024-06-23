@@ -20,7 +20,7 @@ impl Plat for Linux {
         thread::spawn(move || {
             loop {
                 thread::sleep(std::time::Duration::from_millis(1000));
-                sender.send(evq::Event::Tick1Hz {});
+                sender.send(evq::Event::Tick1Hz {}).unwrap();
             }
         });
         return Rv::Ok;
