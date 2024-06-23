@@ -26,9 +26,10 @@ pub fn bms() {
         match e {
             Event::Tick1Hz => {
                 println!("event: Tick1Hz");
+                println!("{:?}", plat.devs().uart.uart0.get_stats());
             }
             Event::Uart { dev, data, len } => {
-                println!("event: Uart {:?} {}", data, len);
+                println!("event: Uart({}) len={}, data={:?}", dev, len, data);
             }
         }
     });

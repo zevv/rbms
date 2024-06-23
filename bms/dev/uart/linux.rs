@@ -1,8 +1,8 @@
 
 use std::thread;
 use std::sync::Mutex;
-use std::mem::MaybeUninit;
 use std::sync::mpsc::SyncSender;
+use std::fmt;
 
 use nix::fcntl::{OFlag, open};
 use nix::unistd::{write, read};
@@ -77,7 +77,6 @@ impl Dev for Linux {
     }
 }
 
-
 impl Uart for Linux {
 
     // Write data to the uart
@@ -90,6 +89,10 @@ impl Uart for Linux {
     fn get_stats(&self) -> Stats {
         let dd = self.dd.lock().unwrap();
         return dd.stats;
+    }
+
+    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "linux@{}", self.path)
     }
 }
 
