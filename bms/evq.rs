@@ -6,7 +6,7 @@ use crate::bms::dev;
 
 pub enum Event {
     Tick1Hz,
-    Tick10Hz,
+    //Tick10Hz,
     Uart { 
         dev: &'static (dyn dev::uart::Uart + Send + Sync),
         data: [u8; 8],

@@ -1,6 +1,7 @@
 
 use std::thread;
 use std::sync::Mutex;
+use std::mem::MaybeUninit;
 use std::sync::mpsc::SyncSender;
 
 use nix::fcntl::{OFlag, open};

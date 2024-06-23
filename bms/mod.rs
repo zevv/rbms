@@ -25,10 +25,10 @@ pub fn bms() {
     evq.reg(|e| {
         match e {
             Event::Tick1Hz => {
-                println!("1Hz");
+                println!("event: Tick1Hz");
             }
             Event::Uart { dev, data, len } => {
-                println!("Uart {:?} {}", data, len);
+                println!("event: Uart {:?} {}", data, len);
             }
         }
     });
