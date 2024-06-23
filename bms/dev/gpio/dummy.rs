@@ -13,7 +13,7 @@ struct Dummy {
     state: Mutex<bool>,
 }
 
-pub fn new(_: &Evq, pin: u8) -> &'static (dyn Gpio + Sync){
+pub fn new(_: &Evq, pin: u8) -> &'static (dyn Gpio + Sync) {
     return Box::leak(Box::new(Dummy {
         pin: pin,
         state: Mutex::new(false),

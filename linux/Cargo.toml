@@ -8,3 +8,8 @@ nix = "0.22.0"
 
 [profile.dev]
 panic="abort"
+
+[features]
+default = ["linux"]
+linux=[]
+

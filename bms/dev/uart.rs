@@ -1,4 +1,5 @@
 
+#[cfg(feature = "linux")]
 pub mod linux;
 
 use super::Dev;
