@@ -1,6 +1,6 @@
 
 
 ```
-cd linux
-cargo run
+$ cd linux
+$ cargo run
 ```
