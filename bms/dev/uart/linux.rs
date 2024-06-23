@@ -53,7 +53,7 @@ impl Dev for Linux {
                 let mut data: [u8; 8] = [0; 8];
                 let len = read(fd, &mut data).expect("Failed to read");
                 let ev = Event::Uart { 
-                    //TODO dev: self,
+                    dev: self,
                     data: data,
                     len: len as u8
                 };
