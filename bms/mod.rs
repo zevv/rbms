@@ -3,43 +3,32 @@
 pub mod evq;
 pub mod rv;
 pub mod dev;
+pub mod plat;
 
 use evq::Event;
+
 
 pub fn bms() {
 
     let evq = evq::Evq::new();
-    let mut mgr = dev::Mgr::new();
+    let mut devmgr = dev::Mgr::new();
 
-    let g = dev::gpio::dummy::new(evq, 1);
-    mgr.add(g);
+    let plat: &'static dyn plat::bms::Bms = plat::bms::linux::new(evq, &mut devmgr);
+    plat.init();
 
-    let g2 = dev::gpio::dummy::new(evq, 2);
-    mgr.add(g2);
+    devmgr.init();
+    devmgr.dump();
 
-    let uart = dev::uart::linux::new(evq, "/dev/stdout");
-    mgr.add(uart);
-
-    uart.write("=== Hello\n".as_bytes());
-
-    mgr.init();
-    mgr.dump();
-
-    let h = g;
-
-    g.set(false);
-    h.set(true);
+    plat.devs().uart.uart0.write("=== Hello\n".as_bytes());
+    plat.devs().gpio.backlight.set(false);
 
     evq.reg(|e| {
         match e {
             Event::Tick1Hz => {
                 println!("1Hz");
             }
-            Event::Tick10Hz => {
-                println!("10Hz");
-            }
-            Event::Uart { data, len: _ } => {
-                println!("Uart {:?}", data);
+            Event::Uart { data, len } => {
+                println!("Uart {:?} {}", data, len);
             }
         }
     });

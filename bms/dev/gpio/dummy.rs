@@ -1,9 +1,6 @@
 
 
 use std::sync::{Mutex};
-//use std::thread;
-use std::sync::mpsc::SyncSender;
-use crate::bms::evq::Event;
 use super::super::Dev;
 use super::Gpio;
 use super::super::Kind;
@@ -13,14 +10,12 @@ use crate::bms::rv::Rv;
 struct Dummy {
     pin: u8,
     state: Mutex<bool>,
-    sender: SyncSender<Event>,
 }
 
-pub fn new(evq: &Evq, pin: u8) -> &'static dyn Gpio {
+pub fn new(_: &Evq, pin: u8) -> &'static dyn Gpio {
     return Box::leak(Box::new(Dummy {
         pin: pin,
         state: Mutex::new(false),
-        sender: evq.sender(),
     }));
 }
 

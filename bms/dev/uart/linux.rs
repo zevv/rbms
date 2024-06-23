@@ -16,28 +16,34 @@ struct Dd {
 }
 
 struct Linux {
-    dev: &'static str,
+    path: &'static str,
     sender: SyncSender<Event>,
     dd: Mutex<Dd>,
 }
 
-pub fn new(evq: &Evq, dev: &'static str) -> &'static dyn Uart {
+
+pub fn new(evq: &Evq, path: &'static str) -> &'static dyn Uart {
     return Box::leak(Box::new(Linux {
-        dev: dev,
+        path: path,
         sender: evq.sender(),
         dd: Mutex::new(Dd { fd: 42 }),
     }));
 }
 
+
 impl Dev for Linux {
     fn init(&'static self) -> Rv {
-        let fd = open(self.dev, OFlag::O_RDWR, Mode::empty()).expect("Failed to open uart");
+        let fd = open(self.path, OFlag::O_RDWR, Mode::empty()).expect("Failed to open uart");
         self.dd.lock().unwrap().fd = fd;
         thread::spawn(move || {
             loop {
                 let mut data: [u8; 8] = [0; 8];
                 let len = read(fd, &mut data).expect("Failed to read");
-                let ev = Event::Uart { data: data, len: len as u8 };
+                let ev = Event::Uart { 
+                    dev: self,
+                    data: data,
+                    len: len as u8
+                };
                 self.sender.send(ev).unwrap();
             }
         });
@@ -51,7 +57,7 @@ impl Dev for Linux {
 
 impl Uart for Linux {
     fn write(&self, data: &[u8]) {
-         write(self.dd.lock().unwrap().fd, data);
+         _= write(self.dd.lock().unwrap().fd, data);
     }
 }
 

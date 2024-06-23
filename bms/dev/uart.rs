@@ -9,3 +9,4 @@ pub trait Uart : Dev {
     fn write(&self, data: &[u8]);
 }
 
+

@@ -4,9 +4,9 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum Rv {
         Ok,          /* No error */
-        ErrIo,       /* I/O error */
-        ErrImpl,     /* Not implemented */
         ErrNotReady, /* Not ready */
+        //ErrIo,       /* I/O error */
+        //ErrImpl,     /* Not implemented */
         //ErrNoent,    /* Not found */
         //ErrNodev,    /* No such device */
         //ErrTimeout,  /* Timeout */
