@@ -3,7 +3,7 @@ use std::cell::RefCell;
 
 struct Handler {
     cmd: &'static str,
-    _usage: &'static str,
+    usage: &'static str,
     cb: Box<dyn Fn(&Cli, &str) -> Rv>,
 }
 
@@ -17,11 +17,23 @@ pub struct CliMgr {
 
 impl CliMgr {
     pub fn new() -> &'static CliMgr {
-        Box::leak(Box::new(CliMgr {
+        let climgr = Box::leak(Box::new(CliMgr {
             state: RefCell::new(CliMgrState {
                 handlers: Vec::new(),
             }),
-        }))
+        }));
+
+        climgr.reg("help", "show help", |cli, _args| {
+            for h in cli.mgr.state.borrow().handlers.iter() {
+                cli.print(h.cmd);
+                cli.print(" - ");
+                cli.print(h.usage);
+                cli.print("\n");
+            }
+            Rv::Ok
+        });
+
+        climgr
     }
 
     pub fn reg<F>(&self, cmd: &'static str, usage: &'static str, cb: F)
@@ -30,7 +42,7 @@ impl CliMgr {
     {
         self.state.borrow_mut().handlers.push(Handler {
             cmd: cmd,
-            _usage: usage,
+            usage: usage,
             cb: Box::new(cb),
         });
     }

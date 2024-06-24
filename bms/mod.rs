@@ -11,15 +11,15 @@ pub fn bms() {
     let devmgr = dev::Mgr::new();
 
     #[cfg(feature = "linux")]
-    let plat: &'static dyn plat::bms::Bms = plat::bms::linux::new(evq, devmgr);
+    let plat: &'static dyn plat::Plat = plat::linux::new(evq, devmgr);
 
     #[cfg(feature = "nowos")]
-    let plat: &'static dyn plat::bms::Bms = plat::bms::nowos::new(evq, devmgr);
+    let plat: &'static dyn plat::Plat = plat::nowos::new(evq, devmgr);
 
     log::set_console(plat.console());
 
-    plat.climgr().reg("help", "show help", |cli, _args| {
-        cli.print("Hello");
+    plat.climgr().reg("quit", "bye bye", |cli, _args| {
+        evq.stop();
         rv::Rv::Ok
     });
 

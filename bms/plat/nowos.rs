@@ -4,8 +4,8 @@ use esp_idf_hal::peripherals::Peripherals;
 
 use std::thread;
 use crate::bms::plat::Plat;
-use crate::bms::plat::bms;
-use crate::bms::plat::bms::Bms;
+use crate::bms::plat;
+use crate::bms::plat::Bms;
 use crate::bms::evq;
 use crate::bms::dev;
 use crate::bms::rv::Rv;
@@ -28,17 +28,14 @@ impl Plat for Nowos {
         });
         return Rv::Ok;
     }
-}
 
-
-impl Bms for Nowos {
     fn devs(&self) -> &bms::Devices {
         &self.devs
     }
 }
 
 
-pub fn new(evq: &'static evq::Evq, devmgr: &mut dev::Mgr) -> &'static dyn Bms {
+pub fn new(evq: &'static evq::Evq, devmgr: &mut dev::Mgr) -> &'static dyn Plat {
 
     let peripherals = Peripherals::take().unwrap();
     let pin = peripherals.pins.gpio15.downgrade();
