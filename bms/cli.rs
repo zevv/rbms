@@ -3,7 +3,7 @@ use std::cell::RefCell;
 
 struct Handler {
     cmd: &'static str,
-    usage: &'static str,
+    _usage: &'static str,
     cb: Box<dyn Fn(&Cli, &str) -> Rv>,
 }
 
@@ -30,7 +30,7 @@ impl CliMgr {
     {
         self.state.borrow_mut().handlers.push(Handler {
             cmd: cmd,
-            usage: usage,
+            _usage: usage,
             cb: Box::new(cb),
         });
     }
@@ -134,5 +134,6 @@ impl Cli {
             (self.on_tx)(c as u8);
         }
     }
+
 }
 

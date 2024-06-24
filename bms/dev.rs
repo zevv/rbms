@@ -1,6 +1,7 @@
 pub mod gpio;
 pub mod uart;
 
+use crate::bms::log;
 use crate::bms::rv::Rv;
 use std::cell::RefCell;
 use std::fmt;
@@ -52,7 +53,7 @@ impl Mgr {
     }
 
     pub fn dump(&self) {
-        println!("devices:");
+        log::inf("devices:");
         for di in self.devs.borrow().iter() {
             println!("- {:?}: {:?}: {:?}", di.dev.kind(), di.dev, di.status);
         }
