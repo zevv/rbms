@@ -36,8 +36,12 @@ pub fn bms() {
     devmgr.init();
     devmgr.dump();
 
-    plat.devs().uart.uart0.write(b"=== Hello ===\n");
+    let console = plat.devs().uart.uart0;
+
     plat.devs().gpio.backlight.set(true);
+    
+    console.write(b"=== Hello ===\n");
+
     
     evq.reg(|e| {
         match e {
@@ -46,10 +50,11 @@ pub fn bms() {
                 //println!("{:?}", plat.devs().uart.uart0.get_stats());
             }
             Event::Uart { dev, data, len } => {
-                for i in 0..(*len as usize) {
-                    cli.handle_char(data[i] as char);
+                if console.eq(*dev) {
+                    for i in 0..(*len as usize) {
+                        cli.handle_char(data[i] as char);
+                    }
                 }
-                //println!("event: Uart dev={:?} len={:?}, data={:?}", *dev as &(dyn dev::Dev + Sync), len, data);
             }
         }
     });

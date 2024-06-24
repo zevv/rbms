@@ -12,9 +12,14 @@ pub enum Kind {
 }
 
 pub trait Dev {
+
     fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
+
+    fn eq(&self, dev: &'static dyn Dev) -> bool {
+        return std::ptr::addr_eq(self, dev)
+    }
 }
 
 struct DevInfo {
@@ -33,11 +38,12 @@ impl Mgr {
         }
     }
 
-    pub fn add(&mut self, dev: &'static (dyn Dev + Sync)) {
+    pub fn add(&mut self, dev: &'static (dyn Dev + Sync)) -> &'static dyn Dev {
         self.devs.push(DevInfo {
             dev: dev,
             status: Rv::ErrNotReady,
         });
+        return dev
     }
 
     pub fn init(&mut self) {
