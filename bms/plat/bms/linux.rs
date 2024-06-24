@@ -58,7 +58,7 @@ pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr) -> &'static dyn Bm
         uart0.write(&buf);
     });
 
-    let plat = Linux {
+    let plat = Box::leak(Box::new(Linux {
         evq: evq,
         devs: bms::Devices {
             gpio: bms::Gpio {
@@ -71,7 +71,7 @@ pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr) -> &'static dyn Bm
             },
         },
         climgr: climgr,
-    };
+    }));
 
     devmgr.add(plat.devs.gpio.backlight);
     devmgr.add(plat.devs.gpio.charge);
@@ -91,8 +91,7 @@ pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr) -> &'static dyn Bm
         }
     });
 
-
-    return Box::leak(Box::new(plat));
+    plat
 }
 
 
