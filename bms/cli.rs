@@ -126,7 +126,7 @@ impl Cli {
             let n = self.split(line, &mut parts);
             self.mgr.handle_line(self, &parts, n);
         }
-        write!(self, "> ");
+        self.print("> ");
     }
 
     pub fn print(&self, s: &str) {
@@ -134,18 +134,5 @@ impl Cli {
             (self.on_tx)(c as u8);
         }
     }
-}
-
-impl std::fmt::Write for Cli {
-    fn write_fmt(&mut self, fmt: std::fmt::Arguments) -> std::fmt::Result {
-        let mut buf = [0; 128];
-        let mut writer = std::fmt::Write::by_ref(&mut buf);
-        writer.write_fmt(fmt)?;
-        for c in buf.iter() {
-            (self.on_tx)(*c);
-        }
-        Ok(())
-    }
-
 }
 
