@@ -5,13 +5,13 @@ use std::fmt;
 pub enum Rv {
         Ok,          /* No error */
         ErrNotReady, /* Not ready */
+        ErrInval,    /* Invalid argument */
         //ErrIo,       /* I/O error */
         //ErrImpl,     /* Not implemented */
         //ErrNoent,    /* Not found */
         //ErrNodev,    /* No such device */
         //ErrTimeout,  /* Timeout */
         //ErrBusy,     /* Busy */
-        //ErrInval,    /* Invalid argument */
         //ErrNospc,    /* No space left */
         //ErrProto,    /* Protocol error */
         //ErrNomem,    /* Out of memory */
