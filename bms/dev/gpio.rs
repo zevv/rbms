@@ -11,3 +11,6 @@ pub trait Gpio : Dev {
     fn set(&self, state: bool) -> Rv;
 }
 
+struct GpioHandle {
+    gpio: &'static (dyn Gpio + Sync),
+}
