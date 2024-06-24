@@ -6,41 +6,62 @@ struct Handler {
     cb: Box<dyn Fn(&str)>,
 }
 
-struct State {
-    buf: [char; 128],
-    len: usize,
+struct CliMgrState {
     handlers: Vec<Handler>,
 }
 
-pub struct Cli {
-    state: RefCell<State>,
-    on_tx: Box<dyn Fn(u8)>,
-
+pub struct CliMgr {
+    state: RefCell<CliMgrState>,
 }
 
-pub fn new<F>(on_tx: F) -> &'static Cli 
-    where F: Fn(u8) + 'static {
 
-    return Box::leak(Box::new(Cli {
-        state: RefCell::new(State {
-            buf: ['\0'; 128],
-            len: 0,
-            handlers: Vec::new(),
-        }),
-        on_tx: Box::new(on_tx),
-    }));
-}
+impl CliMgr {
 
-impl Cli {
-
+    pub fn new() -> &'static CliMgr {
+        Box::leak(Box::new(CliMgr {
+            state: RefCell::new(CliMgrState {
+                handlers: Vec::new(),
+            }),
+        }))
+    }
+    
     pub fn reg<F>(&self, cmd: &str, cb: F) 
         where F: Fn(&str) + 'static {
-        let mut state = self.state.borrow_mut();
-        state.handlers.push(Handler {
+        self.state.borrow_mut().handlers.push(Handler {
             cmd: cmd.to_string(),
             cb: Box::new(cb),
         });
     }
+
+    pub fn add_cli<F>(&'static self, on_tx: F) -> &'static Cli 
+        where F: Fn(u8) + 'static {
+
+        return Box::leak(Box::new(Cli {
+            state: RefCell::new(CliState {
+                buf: ['\0'; 128],
+                len: 0,
+            }),
+            on_tx: Box::new(on_tx),
+            mgr: self,
+        }));
+    }
+}
+
+
+struct CliState {
+    buf: [char; 128],
+    len: usize,
+}
+
+pub struct Cli {
+    state: RefCell<CliState>,
+    on_tx: Box<dyn Fn(u8)>,
+    mgr: &'static CliMgr,
+
+}
+
+
+impl Cli {
 
     pub fn handle_char(&self, c: char) {
         match c {

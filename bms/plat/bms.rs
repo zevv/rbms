@@ -27,7 +27,8 @@ pub struct Devices {
 
 pub trait Bms : Plat {
     fn devs(&self) -> &Devices;
-
+    fn climgr(&self) -> &crate::bms::cli::CliMgr;
+    fn console(&self) -> &'static (dyn dev::uart::Uart + Sync);
 }
 
 

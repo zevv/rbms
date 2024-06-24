@@ -24,6 +24,8 @@ pub struct Evq {
     handlers: RefCell<Vec<Handler>>,
 }
 
+unsafe impl Sync for Evq {}
+
 impl Evq {
 
     pub fn new() -> &'static Evq {

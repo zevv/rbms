@@ -5,12 +5,15 @@ use crate::bms::plat::bms;
 use crate::bms::plat::bms::Bms;
 use crate::bms::evq;
 use crate::bms::dev;
+use crate::bms::cli;
+use crate::bms::evq::Event;
 use crate::bms::rv::Rv;
 
 
 pub struct Linux {
-    devs: bms::Devices,
     evq: &'static evq::Evq,
+    devs: bms::Devices,
+    climgr: &'static cli::CliMgr,
 }
 
 
@@ -32,12 +35,30 @@ impl Bms for Linux {
     fn devs(&self) -> &bms::Devices {
         &self.devs
     }
+
+    fn climgr(&self) -> &crate::bms::cli::CliMgr {
+        &self.climgr
+    }
+
+    fn console(&self) -> &'static (dyn dev::uart::Uart + Sync) {
+        self.devs.uart.uart0
+    }
+
 }
 
 
-pub fn new(evq: &'static evq::Evq, devmgr: &mut dev::Mgr) -> &'static dyn Bms {
+pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr) -> &'static dyn Bms {
 
-    let plat = Box::leak(Box::new(Linux {
+    let climgr = cli::CliMgr::new();
+
+    let uart0 = dev::uart::linux::new(evq, "/dev/stdout");
+
+    let cli = climgr.add_cli(|c| {
+        let buf = [c as u8];
+        uart0.write(&buf);
+    });
+
+    let plat = Linux {
         evq: evq,
         devs: bms::Devices {
             gpio: bms::Gpio {
@@ -45,19 +66,33 @@ pub fn new(evq: &'static evq::Evq, devmgr: &mut dev::Mgr) -> &'static dyn Bms {
                 charge: dev::gpio::dummy::new(evq, 28),
                 discharge: dev::gpio::dummy::new(evq, 5),
             },
-
             uart: bms::Uart {
-                uart0: dev::uart::linux::new(evq, "/dev/stdout"),
+                uart0: uart0,
             },
         },
-    }));
+        climgr: climgr,
+    };
 
     devmgr.add(plat.devs.gpio.backlight);
     devmgr.add(plat.devs.gpio.charge);
     devmgr.add(plat.devs.gpio.discharge);
     devmgr.add(plat.devs.uart.uart0);
 
-    return plat
+    evq.reg(|e| {
+        match e {
+            Event::Uart { dev, data, len } => {
+                if dev.eq(uart0) {
+                    for i in 0..(*len as usize) {
+                        cli.handle_char(data[i] as char);
+                    }
+                }
+            }
+            _ => {}
+        }
+    });
+
+
+    return Box::leak(Box::new(plat));
 }
 
 
