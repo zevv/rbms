@@ -70,7 +70,7 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     unsafe {
         let t = time(0 as *mut i64);
         let tm = gmtime(&t, 0 as *const u8);
-        const fmt = "%y-%m-%d %H:%M:%S".as_ptr() as *const i8;
+        let fmt = "%y-%m-%d %H:%M:%S".as_ptr() as *const i8;
         let (a, b) = slice.split_at_mut(17);
         strftime(a.as_mut_ptr(), 64, fmt, tm);
         slice = b;
