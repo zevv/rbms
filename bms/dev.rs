@@ -53,9 +53,9 @@ impl Mgr {
     }
 
     pub fn dump(&self) {
-        log::inf("devices:");
+        linf!("devices:");
         for di in self.devs.borrow().iter() {
-            println!("- {:?}: {:?}: {:?}", di.dev.kind(), di.dev, di.status);
+            linf!("- {:?}: {:?}: {:?}", di.dev.kind(), di.dev, di.status);
         }
     }
 }

@@ -73,8 +73,8 @@ impl Evq {
     }
 
     pub fn stop(&self) {
-        let mut state = self.data.borrow_mut();
-        println!("stop {}", state.running);
+        //let mut state = self.data.borrow_mut();
+        //println!("stop {}", state.running);
         //state.running = false;
     }
 }

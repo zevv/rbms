@@ -1,4 +1,5 @@
 use crate::bms::rv::Rv;
+use crate::bms::log;
 use std::cell::RefCell;
 
 struct Handler {
@@ -32,6 +33,8 @@ impl CliMgr {
             }
             Rv::Ok
         });
+
+        linf!("Hello");
 
         climgr
     }

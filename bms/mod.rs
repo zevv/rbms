@@ -1,9 +1,11 @@
+#[macro_use]
+pub mod log;
 pub mod cli;
 pub mod dev;
 pub mod evq;
 pub mod plat;
 pub mod rv;
-pub mod log;
+
 
 
 pub fn bms() {
@@ -18,7 +20,7 @@ pub fn bms() {
 
     log::set_console(plat.console());
 
-    plat.climgr().reg("quit", "bye bye", |cli, _args| {
+    plat.climgr().reg("quit", "bye bye", |_cli, _args| {
         evq.stop();
         rv::Rv::Ok
     });
@@ -27,13 +29,11 @@ pub fn bms() {
     devmgr.init();
     devmgr.dump();
     
-    log::inf("Hallo");
-
     let console = plat.devs().uart.uart0;
 
     plat.devs().gpio.backlight.set(true);
 
-    console.write(b"=== Hello ===\n");
+    linf!("=== start ===");
 
     evq.run();
 }
