@@ -77,13 +77,9 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     }
 
     // emit rest of the line to the buffer.
-    slice.write(b" ");
-    slice.write(li.tag.as_bytes());
-    slice.write(b" ");
     let l = path.len() - 8;
     slice.write(path[l..].as_bytes());
-    slice.write(b" ");
-    write!(slice, "{}", args);
+    write!(slice, "{} {} {}", li.tag, path, args);
     
     // Create a slice for the written portion of the buffer.
     let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
@@ -96,9 +92,12 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
         Some(uart) => {
             uart.write(li.color.as_bytes());
             uart.write(&line);
-            uart.write(b"\x1b[0m\n");
+            uart.write(b"\n\x1b[0m");
         }
-        None => {}
+        None => {
+            std::io::stdout().write(&line);
+            std::io::stdout().write(b"\n");
+        }
     }
 
     for h in data.handlers.iter() {
