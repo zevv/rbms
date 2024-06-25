@@ -37,7 +37,7 @@ pub fn bms() {
     //    linf!("filter 2");
     //});
 
-    linf!("=== start ===");
+    log::inf!("=== start ===");
 
     evq.run();
 }

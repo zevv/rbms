@@ -34,7 +34,7 @@ impl Mgr {
             Rv::Ok
         });
 
-        linf!("Hello");
+        log::inf!("Hello");
 
         climgr
     }

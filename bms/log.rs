@@ -107,14 +107,19 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
 
 
 #[macro_export]
-macro_rules! ldmp { ($($arg:tt)*) => (log::logf(log::Level::Dmp, module_path!(), format_args!($($arg)*))); }
+macro_rules! dmp { ($($arg:tt)*) => (log::logf(log::Level::Dmp, module_path!(), format_args!($($arg)*))); }
 #[macro_export]
-macro_rules! ldbg { ($($arg:tt)*) => (log::logf(log::Level::Dbg, module_path!(), format_args!($($arg)*))); }
+macro_rules! dbg { ($($arg:tt)*) => (log::logf(log::Level::Dbg, module_path!(), format_args!($($arg)*))); }
 #[macro_export]
-macro_rules! linf { ($($arg:tt)*) => (log::logf(log::Level::Inf, module_path!(), format_args!($($arg)*))); }
+macro_rules! inf { ($($arg:tt)*) => (log::logf(log::Level::Inf, module_path!(), format_args!($($arg)*))); }
 #[macro_export]
-macro_rules! lwrn { ($($arg:tt)*) => (log::logf(log::Level::Wrn, module_path!(), format_args!($($arg)*))); }
+macro_rules! wrn { ($($arg:tt)*) => (log::logf(log::Level::Wrn, module_path!(), format_args!($($arg)*))); }
 #[macro_export]
-macro_rules! lerr { ($($arg:tt)*) => (log::logf(log::Level::Err, module_path!(), format_args!($($arg)*))); }
+macro_rules! err { ($($arg:tt)*) => (log::logf(log::Level::Err, module_path!(), format_args!($($arg)*))); }
 
+pub(crate) use dmp;
+pub(crate) use dbg;
+pub(crate) use inf;
+pub(crate) use wrn;
+pub(crate) use err;
 
