@@ -10,7 +10,7 @@ use std::thread;
 pub struct Linux {
     evq: &'static evq::Evq,
     devs: plat::Devices,
-    climgr: &'static cli::CliMgr,
+    climgr: &'static cli::Mgr,
 }
 
 impl Plat for Linux {
@@ -27,7 +27,7 @@ impl Plat for Linux {
         &self.devs
     }
 
-    fn climgr(&self) -> &cli::CliMgr {
+    fn climgr(&self) -> &cli::Mgr {
         &self.climgr
     }
 
@@ -36,8 +36,7 @@ impl Plat for Linux {
     }
 }
 
-pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr) -> &'static dyn Plat {
-    let climgr = cli::CliMgr::new();
+pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr, climgr: &'static cli::Mgr) -> &'static dyn Plat {
 
     let uart0 = dev::uart::linux::new(evq, "/dev/stdout");
 

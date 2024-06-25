@@ -8,18 +8,18 @@ struct Handler {
     cb: Box<dyn Fn(&Cli, &str) -> Rv>,
 }
 
-struct CliMgrState {
+struct MgrState {
     handlers: Vec<Handler>,
 }
 
-pub struct CliMgr {
-    state: RefCell<CliMgrState>,
+pub struct Mgr {
+    state: RefCell<MgrState>,
 }
 
-impl CliMgr {
-    pub fn new() -> &'static CliMgr {
-        let climgr = Box::leak(Box::new(CliMgr {
-            state: RefCell::new(CliMgrState {
+impl Mgr {
+    pub fn new() -> &'static Mgr {
+        let climgr = Box::leak(Box::new(Mgr {
+            state: RefCell::new(MgrState {
                 handlers: Vec::new(),
             }),
         }));
@@ -84,7 +84,7 @@ struct CliState {
 pub struct Cli {
     state: RefCell<CliState>,
     on_tx: Box<dyn Fn(u8)>,
-    mgr: &'static CliMgr,
+    mgr: &'static Mgr,
 }
 
 impl Cli {
