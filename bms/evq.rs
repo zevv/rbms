@@ -48,8 +48,7 @@ impl Evq {
     }
 
     pub fn reg<F>(&self, cb: F) 
-        where F: Fn(&Event) + 'static
-    {
+        where F: Fn(&Event) + 'static {
         let mut state = self.data.borrow_mut();
         state.handlers.push(
             Handler {

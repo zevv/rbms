@@ -3,6 +3,12 @@ use std::sync::Mutex;
 use crate::bms::dev;
 use std::io::Write;
 
+extern "C" {
+    fn time(timep: *mut i64) -> i64;
+    fn gmtime(timep: *const i64, result: *const u8) -> *const u8;
+    fn strftime(s: *mut u8, maxsize: usize, format: *const i8, timeptr: *const u8) -> usize;
+}
+
 pub enum Level { Dmp, Dbg, Inf, Wrn, Err, Tst, }
 
 struct LevelInfo {
@@ -36,23 +42,7 @@ pub fn set_console(uart: &'static (dyn dev::uart::Uart + Sync)) {
     data.uart = Some(uart);
 }
 
-
-extern "C" {
-    fn time(timep: *mut i64) -> i64;
-    fn gmtime(timep: *const i64, result: *const u8) -> *const u8;
-    fn strftime(s: *mut u8, maxsize: usize, format: *const i8, timeptr: *const u8) -> usize;
-}
-
-
-
-
-#[macro_export]
-macro_rules! linf {
-    ($($arg:tt)*) => (log::logf2(log::Level::Inf, module_path!(), format_args!($($arg)*)));
-}
-
-
-pub fn logf2(level: Level, path: &str, args: std::fmt::Arguments) {
+pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     // format string into fixed size buffer, truncate if too long.
     let mut linebuf = [0u8; 128];
     let mut slice = &mut linebuf[..];
@@ -89,4 +79,17 @@ pub fn logf2(level: Level, path: &str, args: std::fmt::Arguments) {
         None => {}
     }
 }
+
+
+#[macro_export]
+macro_rules! ldmp { ($($arg:tt)*) => (log::logf(log::Level::Dmp, module_path!(), format_args!($($arg)*))); }
+#[macro_export]
+macro_rules! ldbg { ($($arg:tt)*) => (log::logf(log::Level::Dbg, module_path!(), format_args!($($arg)*))); }
+#[macro_export]
+macro_rules! linf { ($($arg:tt)*) => (log::logf(log::Level::Inf, module_path!(), format_args!($($arg)*))); }
+#[macro_export]
+macro_rules! lwrn { ($($arg:tt)*) => (log::logf(log::Level::Wrn, module_path!(), format_args!($($arg)*))); }
+#[macro_export]
+macro_rules! lerr { ($($arg:tt)*) => (log::logf(log::Level::Err, module_path!(), format_args!($($arg)*))); }
+
 
