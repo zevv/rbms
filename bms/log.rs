@@ -25,8 +25,13 @@ static LEVEL_INFO: [LevelInfo; 6] = [
     LevelInfo { tag: "tst", color: "\x1b[7m" },
 ];
 
+struct Handler {
+    cb: &'static (dyn Fn(&str) + Sync),
+}
+
 struct Data {
     uart: Option<&'static (dyn dev::uart::Uart + Sync)>,
+    handlers: Vec<Handler>,
 }
 
 struct Logger {
@@ -34,49 +39,70 @@ struct Logger {
 }
 
 static LOGGER: Logger = Logger {
-    data: Mutex::new(Data { uart: None }),
+    data: Mutex::new(Data {
+        uart: None,
+        handlers: Vec::new(),
+    }),
 };
 
 pub fn set_console(uart: &'static (dyn dev::uart::Uart + Sync)) {
     let mut data = LOGGER.data.lock().unwrap();
     data.uart = Some(uart);
 }
+    
+pub fn reg<F>(_cb: F) 
+    where F: Fn(&str) + 'static + Sync {
+    let mut data = LOGGER.data.lock().unwrap();
+    let handler = Handler { cb: Box::leak(Box::new(_cb)) };
+    data.handlers.push(handler);
+}
 
 pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
-    // format string into fixed size buffer, truncate if too long.
+    
+    let li = &LEVEL_INFO[level as usize];
+
+    // format string into fixed size buffer, truncate if too long. Create
+    // a slice to write to the buffer
     let mut linebuf = [0u8; 128];
     let mut slice = &mut linebuf[..];
-    let _ = write!(slice, "{}", args);
-    let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
-    let line = &linebuf[0..n];
 
-    // format timestamp in fixed size buffer.
-    let mut timebuf: [u8; 17] = [0; 17];
+    // format timestamp in fixed size buffer and update the slice.
     unsafe {
         let t = time(0 as *mut i64);
         let tm = gmtime(&t, 0 as *const u8);
         let fmt = "%y-%m-%d %H:%M:%S".as_ptr() as *const i8;
-        strftime(timebuf.as_mut_ptr(), 64, fmt, tm);
+        let (a, b) = slice.split_at_mut(17);
+        strftime(a.as_mut_ptr(), 64, fmt, tm);
+        slice = b;
     }
+
+    // emit rest of the line to the buffer.
+    slice.write(b" ");
+    slice.write(li.tag.as_bytes());
+    slice.write(b" ");
+    let l = path.len() - 8;
+    slice.write(path[l..].as_bytes());
+    slice.write(b" ");
+    write!(slice, "{}", args);
+    
+    // Create a slice for the written portion of the buffer.
+    let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
+    let line = &linebuf[..n];
 
     // emit log message.
     let data = LOGGER.data.lock().unwrap();
 
-    let li = &LEVEL_INFO[level as usize];
     match data.uart {
         Some(uart) => {
             uart.write(li.color.as_bytes());
-            uart.write(&timebuf);
-            uart.write(b" ");
-            uart.write(li.tag.as_bytes());
-            uart.write(b" ");
-            let l = path.len() - 5;
-            uart.write(path[l..].as_bytes());
-            uart.write(b" ");
-            uart.write(&linebuf);
+            uart.write(&line);
             uart.write(b"\x1b[0m\n");
         }
         None => {}
+    }
+
+    for h in data.handlers.iter() {
+        (h.cb)(std::str::from_utf8(&line).unwrap());
     }
 }
 
