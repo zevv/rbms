@@ -1,6 +1,7 @@
+use std::io::Write;
+use std::cell::RefCell;
 use crate::bms::rv::Rv;
 use crate::bms::log;
-use std::cell::RefCell;
 
 struct Handler {
     cmd: &'static str,
@@ -16,6 +17,11 @@ pub struct Mgr {
     state: RefCell<MgrState>,
 }
 
+#[macro_export]
+macro_rules! ff { ($($arg:tt)*) => (format_args!($($arg)*)); }
+pub(crate) use ff;
+
+
 impl Mgr {
     pub fn new() -> &'static Mgr {
         let climgr = Box::leak(Box::new(Mgr {
@@ -26,10 +32,8 @@ impl Mgr {
 
         climgr.reg("help", "show help", |cli, _args| {
             for h in cli.mgr.state.borrow().handlers.iter() {
-                cli.print(h.cmd);
-                cli.print(" - ");
-                cli.print(h.usage);
-                cli.print("\n");
+                //wop!(cli, "{} - {}\n", h.cmd, h.usage);
+                cli.printf(ff!("{} - {}\n", h.cmd, h.usage));
             }
             Rv::Ok
         });
@@ -148,6 +152,21 @@ impl Cli {
         for c in s.chars() {
             (self.on_tx)(c as u8);
         }
+    }
+
+    pub fn write(&self, buf: &[u8]) {
+        for c in buf.iter() {
+            (self.on_tx)(*c);
+        }
+    }
+
+    pub fn printf(&self, args: std::fmt::Arguments) {
+        let mut linebuf = [0u8; 128];
+        let mut slice = &mut linebuf[..];
+        write!(slice, "{}", args);
+        let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
+        let line = &linebuf[..n];
+        self.write(line);
     }
 
 }
