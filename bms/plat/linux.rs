@@ -63,7 +63,7 @@ pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr, climgr: &'static c
     devmgr.add(plat.devs.gpio.discharge);
     devmgr.add(plat.devs.uart.uart0);
 
-    evq.reg(|e| match e {
+    evq.reg("plat", |e| match e {
         Event::Uart { dev, data, len } => {
             if dev.eq(uart0) {
                 for i in 0..(*len as usize) {

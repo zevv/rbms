@@ -29,7 +29,7 @@ pub fn bms() {
     plat.init();
     devmgr.init();
     
-    let console = plat.devs().uart.uart0;
+    let _console = plat.devs().uart.uart0;
 
     plat.devs().gpio.backlight.set(true);
 

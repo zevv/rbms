@@ -163,7 +163,7 @@ impl Cli {
     pub fn printf(&self, args: std::fmt::Arguments) {
         let mut linebuf = [0u8; 128];
         let mut slice = &mut linebuf[..];
-        write!(slice, "{}", args);
+        _ = write!(slice, "{}", args);
         let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
         let line = &linebuf[..n];
         self.write(line);

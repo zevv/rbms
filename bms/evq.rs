@@ -27,8 +27,9 @@ pub enum Event {
 }
 
 struct Handler {
-    id: u8,
+    evtype: u8,
     cb: Box<dyn Fn(&Event)>,
+    id: &'static str,
     rv: Rv,
     count: RefCell<u32>,
 }
@@ -71,19 +72,20 @@ impl Evq {
         evq
     }
 
-    pub fn reg<F>(&self, cb: F) 
+    pub fn reg<F>(&self, id: &'static str, cb: F) 
         where F: Fn(&Event) + 'static {
-            self.reg_filter(EvType::Any, cb);
+            self.reg_filter(id, EvType::Any, cb);
     }
 
-    pub fn reg_filter<F>(&self, filter_id: EvType, cb: F) 
+    pub fn reg_filter<F>(&self, id: &'static str, evtype: EvType, cb: F) 
         where F: Fn(&Event) + 'static {
         let mut data = self.data.borrow_mut();
         data.handlers.push(
             Handler {
                 cb: Box::new(cb),
+                id: id,
                 rv: Rv::Ok,
-                id: filter_id as u8,
+                evtype: evtype as u8,
                 count: 0.into()
             });
     }
@@ -91,10 +93,10 @@ impl Evq {
     pub fn run(&self) {
         loop {
             let event = self.rx.recv().unwrap();
-            let id = unsafe { *<*const _>::from(&event).cast::<u8>() };
+            let evtype = unsafe { *<*const _>::from(&event).cast::<u8>() };
             let data = self.data.borrow();
             for handler in data.handlers.iter() {
-                if handler.id == 0 || handler.id == id {
+                if handler.evtype == 0 || handler.evtype == evtype {
                     (handler.cb)(&event);
                     *handler.count.borrow_mut() += 1;
                 }
@@ -107,9 +109,8 @@ impl Evq {
     }
 
     pub fn stop(&self) {
-        //let mut state = self.data.borrow_mut();
-        //println!("stop {}", state.running);
-        //state.running = false;
+        let mut state = self.data.borrow_mut();
+        state.running = false;
     }
 }
 

@@ -9,6 +9,7 @@ extern "C" {
     fn strftime(s: *mut u8, maxsize: usize, format: *const i8, timeptr: *const u8) -> usize;
 }
 
+#[allow(dead_code)]
 pub enum Level { Dmp, Dbg, Inf, Wrn, Err, Tst, }
 
 struct LevelInfo {
@@ -78,8 +79,8 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
 
     // emit rest of the line to the buffer.
     let l = path.len() - 8;
-    slice.write(path[l..].as_bytes());
-    write!(slice, "{} {} {}", li.tag, path, args);
+    _ = slice.write(path[l..].as_bytes());
+    _ = write!(slice, "{} {} {}", li.tag, path, args);
     
     // Create a slice for the written portion of the buffer.
     let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
@@ -95,8 +96,8 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
             uart.write(b"\n\x1b[0m");
         }
         None => {
-            std::io::stdout().write(&line);
-            std::io::stdout().write(b"\n");
+            _ = std::io::stdout().write(&line);
+            _ = std::io::stdout().write(b"\n");
         }
     }
 

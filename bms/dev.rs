@@ -3,7 +3,6 @@ pub mod uart;
 
 use std::cell::RefCell;
 use std::fmt;
-use crate::bms::log;
 use crate::bms::rv::Rv;
 use crate::bms::cli;
 
@@ -41,7 +40,7 @@ impl Mgr {
         climgr.reg("dev", "show devices", |cli, _args| {
             cli.print("devices:");
             for di in devmgr.devs.borrow().iter() {
-                //cli->write!("- {:?}: {:?}: {:?}", di.dev.kind(), di.dev, di.status);
+                cli.printf(format_args!("- {:?}: {:?}: {:?}\n", di.dev.kind(), di.dev, di.status));
             }
             Rv::Ok
         });
