@@ -1,10 +1,10 @@
 pub mod gpio;
 pub mod uart;
 
+use crate::bms::cli;
+use crate::bms::rv::Rv;
 use std::cell::RefCell;
 use std::fmt;
-use crate::bms::rv::Rv;
-use crate::bms::cli;
 
 #[derive(Debug)]
 pub enum Kind {
@@ -32,7 +32,7 @@ pub struct Mgr {
 }
 
 impl Mgr {
-    pub fn new(climgr: &'static cli::Mgr ) -> &'static Mgr {
+    pub fn new(climgr: &'static cli::Mgr) -> &'static Mgr {
         let devmgr = Box::leak(Box::new(Mgr {
             devs: RefCell::new(Vec::new()),
         }));
@@ -40,7 +40,12 @@ impl Mgr {
         climgr.reg("dev", "show devices", |cli, _args| {
             cli.print("devices:");
             for di in devmgr.devs.borrow().iter() {
-                cli.printf(format_args!("- {:?}: {:?}: {:?}\n", di.dev.kind(), di.dev, di.status));
+                cli.printf(format_args!(
+                    "- {:?}: {:?}: {:?}\n",
+                    di.dev.kind(),
+                    di.dev,
+                    di.status
+                ));
             }
             Rv::Ok
         });

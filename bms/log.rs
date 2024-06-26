@@ -58,6 +58,17 @@ pub fn reg<F>(_cb: F)
     data.handlers.push(handler);
 }
 
+pub fn fmt_time(slice: &mut [u8]) -> &mut [u8] {
+    unsafe {
+        let t = time(0 as *mut i64);
+        let tm = gmtime(&t, 0 as *const u8);
+        let fmt = "%y-%m-%d %H:%M:%S".as_ptr() as *const i8;
+        let (a, b) = slice.split_at_mut(17);
+        strftime(a.as_mut_ptr(), 64, fmt, tm);
+        return b;
+    }
+}
+
 pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     
     let li = &LEVEL_INFO[level as usize];
@@ -67,20 +78,11 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     let mut linebuf = [0u8; 128];
     let mut slice = &mut linebuf[..];
 
-    // format timestamp in fixed size buffer and update the slice.
-    unsafe {
-        let t = time(0 as *mut i64);
-        let tm = gmtime(&t, 0 as *const u8);
-        let fmt = "%y-%m-%d %H:%M:%S".as_ptr() as *const i8;
-        let (a, b) = slice.split_at_mut(17);
-        strftime(a.as_mut_ptr(), 64, fmt, tm);
-        slice = b;
-    }
-
-    // emit rest of the line to the buffer.
+    // build log message
+    slice = fmt_time(slice);
     let l = path.len() - 8;
     _ = slice.write(path[l..].as_bytes());
-    _ = write!(slice, "{} {} {}", li.tag, path, args);
+    _ = write!(slice, " {} {} {}", li.tag, path, args);
     
     // Create a slice for the written portion of the buffer.
     let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;
