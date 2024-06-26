@@ -10,6 +10,7 @@ use crate::bms::rv::Rv;
 
 #[repr(u8)]
 pub enum EvType {
+    Any = 0,
     Tick1Hz = 1,
     Uart = 2,
 }
@@ -29,7 +30,7 @@ struct Handler {
     id: u8,
     cb: Box<dyn Fn(&Event)>,
     rv: Rv,
-    count: u32,
+    count: RefCell<u32>,
 }
 
 struct Data {
@@ -62,7 +63,7 @@ impl Evq {
         climgr.reg("evq", "show event queue", |_cli, _args| {
             let data = evq.data.borrow();
             for handler in data.handlers.iter() {
-                println!("{} {}", handler.id, handler.count);
+                println!("{} {}", handler.id, handler.count.borrow());
             }
             Rv::Ok
         });
@@ -72,14 +73,7 @@ impl Evq {
 
     pub fn reg<F>(&self, cb: F) 
         where F: Fn(&Event) + 'static {
-        let mut data = self.data.borrow_mut();
-        data.handlers.push(
-            Handler {
-                cb: Box::new(cb),
-                rv: Rv::Ok,
-                id: 0,
-                count: 0,
-            });
+            self.reg_filter(EvType::Any, cb);
     }
 
     pub fn reg_filter<F>(&self, filter_id: EvType, cb: F) 
@@ -90,7 +84,7 @@ impl Evq {
                 cb: Box::new(cb),
                 rv: Rv::Ok,
                 id: filter_id as u8,
-                count: 0,
+                count: 0.into()
             });
     }
     
@@ -98,11 +92,11 @@ impl Evq {
         loop {
             let event = self.rx.recv().unwrap();
             let id = unsafe { *<*const _>::from(&event).cast::<u8>() };
-            let mut data = self.data.borrow_mut();
-            for handler in data.handlers.iter_mut() {
+            let data = self.data.borrow();
+            for handler in data.handlers.iter() {
                 if handler.id == 0 || handler.id == id {
                     (handler.cb)(&event);
-                    handler.count += 1;
+                    *handler.count.borrow_mut() += 1;
                 }
             }
         }
