@@ -4,16 +4,20 @@ use std::sync::Mutex;
 use std::sync::mpsc::SyncSender;
 use std::fmt;
 
-use nix::fcntl::{OFlag, open};
-use nix::unistd::{write, read};
-use nix::sys::stat::Mode;
-
 use crate::bms::evq::Event;
 use crate::bms::evq::Evq;
 use crate::bms::rv::Rv;
 use super::Uart;
 use super::Stats;
 use super::super::Dev;
+
+extern "C" {
+    fn open(path: *const i8, flags: i32, mode: i32) -> i32;
+    fn write(fd: i32, data: *const u8, len: usize) -> i32;
+    fn read(fd: i32, data: *mut u8, len: usize) -> i32;
+}
+
+const O_RDWR: i32 = 0x0002;
 
 struct Dd {
     fd: i32,
@@ -45,24 +49,32 @@ pub fn new(evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
 impl Dev for Linux {
 
     fn init(&'static self) -> Rv {
-        let fd = open(self.path, OFlag::O_RDWR, Mode::empty()).expect("Failed to open uart");
+
+        let path = std::ffi::CString::new(self.path).unwrap();
+        let fd = unsafe {
+            open(path.as_ptr(), O_RDWR, 0)
+        };
 
         // Spawn a thread to read from the uart
         thread::spawn(move || {
             loop {
                 // Read one chunk of data and send it to the event queue
                 let mut data: [u8; 8] = [0; 8];
-                let len = read(fd, &mut data).expect("Failed to read");
-                let ev = Event::Uart { 
-                    dev: self,
-                    data: data,
-                    len: len as u8
+                let len = unsafe {
+                    read(fd, data.as_mut_ptr(), 8)
                 };
-                self.sender.send(ev).unwrap();
+                if len > 0 {
+                    let ev = Event::Uart { 
+                        dev: self,
+                        data: data,
+                        len: len as u8
+                    };
+                    self.sender.send(ev).unwrap();
 
-                // Update the stats
-                let mut dd = self.dd.lock().unwrap();
-                dd.stats.bytes_rx += len as u32;
+                    // Update the stats
+                    let mut dd = self.dd.lock().unwrap();
+                    dd.stats.bytes_rx += len as u32;
+                }
             }
         });
 
@@ -86,8 +98,12 @@ impl Uart for Linux {
     // Write data to the uart
     fn write(&self, data: &[u8]) {
         let fd = self.dd.lock().unwrap().fd;
-        let n = write(fd, data).unwrap();
-        self.dd.lock().unwrap().stats.bytes_tx += n as u32;
+        let n = unsafe {
+            write(fd, data.as_ptr(), data.len())
+        };
+        if n >= 0 {
+            self.dd.lock().unwrap().stats.bytes_tx += n as u32;
+        }
     }
 
     fn get_stats(&self) -> Stats {
