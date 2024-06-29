@@ -93,14 +93,15 @@ pub struct Cli {
 
 impl Cli {
     pub fn handle_char(&self, c: u8) {
-        self.write(&[c]);
         match c as char {
             '\n' | '\r' => {
+                self.write("\r\n".as_bytes());
                 let mut state = self.state.borrow_mut();
                 self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
                 state.len = 0;
             }
             _ => {
+                self.write(&[c]);
                 let mut state = self.state.borrow_mut();
                 if state.len < state.buf.len() {
                     let len = state.len;
