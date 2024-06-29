@@ -81,6 +81,7 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
     // build log message
     slice = fmt_time(slice);
     let l = path.len() - 8;
+    _ = slice.write(b" ");
     _ = slice.write(path[l..].as_bytes());
     _ = write!(slice, " {} {} {}", li.tag, path, args);
     

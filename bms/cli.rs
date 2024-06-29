@@ -76,7 +76,7 @@ impl Mgr {
                 break;
             }
         }
-        println!(": {:?}", rv);
+        cli.printf(format_args!(": {:?}\n", rv));
     }
 }
 
@@ -93,8 +93,9 @@ pub struct Cli {
 
 impl Cli {
     pub fn handle_char(&self, c: u8) {
+        self.write(&[c]);
         match c as char {
-            '\n' => {
+            '\n' | '\r' => {
                 let mut state = self.state.borrow_mut();
                 self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
                 state.len = 0;

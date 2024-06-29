@@ -4,10 +4,7 @@
 use std::fmt;
 use std::sync::{Mutex};
 
-use esp_idf_svc::hal::prelude::Peripherals;
 use esp_idf_svc::hal::gpio::*;
-use esp_idf_hal::sys::esp;
-use esp_idf_sys::*;
 
 use super::super::Dev;
 use super::Gpio;
@@ -16,25 +13,25 @@ use crate::bms::evq::Evq;
 use crate::bms::rv::Rv;
 
 
-struct Dd {
-    pin: AnyIOPin,
+struct Dd<T: Pin> {
+    pin: PinDriver<'static, T, Output>,
 }
 
-struct Esp32 {
-    dd: Mutex<Dd>,
+struct Esp32<T: Pin> {
+    dd: Mutex<Dd<T>>,
 }
 
-pub fn new(_: &Evq, pin: AnyIOPin) -> &'static (dyn Gpio + Sync) {
-    return Box::leak(Box::new(Esp32 {
-        dd: Mutex::new(Dd {
-            pin: pin,
+pub fn new<T: OutputPin>(_: &Evq, pin: T) -> &'static (dyn Gpio + Sync) {
+    let gpio = Box::leak(Box::new(Esp32::<T> {
+        dd: Mutex::new(Dd::<T> {
+            pin: PinDriver::output(pin).unwrap(),
         }),
     }));
-    esp!(unsafe { gpio_set_direction(pin.pin(), gpio_mode_t_GPIO_MODE_OUTPUT) });
+    gpio
 }
 
 
-impl Dev for Esp32 {
+impl<T: Pin> Dev for Esp32<T> {
     fn init(&'static self) -> Rv {
         Rv::Ok
     }
@@ -44,17 +41,20 @@ impl Dev for Esp32 {
     }
     
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let dd = self.dd.lock().unwrap();
-        return write!(f, "esp32@{}", dd.pin.pin());
+        let _dd = self.dd.lock().unwrap();
+        return write!(f, "esp32@");
     }
 }
 
 
-impl Gpio for Esp32 {
+impl<T: Pin> Gpio for Esp32<T> {
     fn set(&self, state: bool) -> Rv {
-        let dd = self.dd.lock().unwrap();
-        esp!(unsafe { gpio_set_level(dd.pin.pin(), state as u32) });
-        println!("esp32: set {} to {}", dd.pin.pin(), state);
+        let mut dd = self.dd.lock().unwrap();
+        if state {
+            dd.pin.set_high().unwrap();
+        } else {
+            dd.pin.set_low().unwrap();
+        }
         Rv::Ok
     }
 }

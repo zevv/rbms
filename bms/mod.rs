@@ -27,17 +27,26 @@ pub fn bms() {
     });
 
     plat.init();
+    println!("devmgr init");
     devmgr.init();
+    println!("devmgr init2");
     
     let _console = plat.devs().uart.uart0;
 
     plat.devs().gpio.backlight.set(true);
 
+    evq.reg_filter("test", evq::EvType::Tick1Hz, move |ev| {
+        //log::inf!("tick1hz");
+        plat.devs().gpio.backlight.set(true);
+    });
+
+
     //evq.reg_filter(evq::EvType::Uart, |ev| {
     //    linf!("filter 2");
     //});
 
-    log::inf!("=== start ===");
+    println!("hooray\n");
+    log::inf!("=== hello ===");
 
     evq.run();
 }

@@ -3,6 +3,7 @@ pub mod uart;
 
 use crate::bms::cli;
 use crate::bms::rv::Rv;
+use crate::bms::log;
 use std::cell::RefCell;
 use std::fmt;
 
@@ -62,7 +63,9 @@ impl Mgr {
     }
 
     pub fn init(&self) {
+        log::inf!("devmgr init");
         for di in self.devs.borrow_mut().iter_mut() {
+            println!("init {:?}", di.dev);
             di.status = di.dev.init();
         }
     }

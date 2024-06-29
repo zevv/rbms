@@ -2,6 +2,7 @@
 use std::cell::RefCell;
 use std::sync::mpsc::{SyncSender, Receiver};
 use crate::bms::cli;
+use crate::bms::log;
 
 use crate::bms::dev;
 use crate::bms::rv::Rv;
