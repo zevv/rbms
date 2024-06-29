@@ -6,22 +6,26 @@ use crate::bms::rv::Rv;
 use crate::bms::log;
 use std::cell::RefCell;
 use std::fmt;
+use std::any::Any;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Kind {
     Gpio,
     Uart,
 }
 
-pub trait Dev {
+pub trait Dev: Any {
     fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
+    fn as_any(&self) -> &dyn Any;
 
     fn eq(&self, dev: &'static dyn Dev) -> bool {
         return std::ptr::addr_eq(self, dev);
     }
 }
+
 
 struct DevInfo {
     dev: &'static (dyn Dev + Sync),
@@ -72,7 +76,7 @@ impl Mgr {
 
     pub fn foreach_dev<F>(&self, f: F)
     where
-        F: Fn(&'static dyn Dev),
+        F: Fn(&'static (dyn Dev + Sync)),
     {
         for di in self.devs.borrow().iter() {
             f(di.dev);

@@ -12,6 +12,7 @@ use crate::bms::rv::Rv;
 
 pub trait Gpio : Dev {
     fn set(&self, state: bool) -> Rv;
+    fn get(&self) -> bool;
 }
 
 
@@ -23,18 +24,31 @@ pub struct Mgr {
 impl Mgr {
 
     pub fn new(climgr: &'static cli::Mgr, devmgr: &'static dev::Mgr) -> &'static Mgr {
+
+        
         let mgr = Box::leak(Box::new(Mgr {
             climgr: climgr,
         }));
 
-        climgr.reg("gpio", "", |cli, _args| {
+        climgr.reg("gpio", "", |cli, args| {
+        
+            let mut rv = Rv::ErrInval;
 
-            devmgr.foreach_dev(|dev| {
-                if dev.kind() == dev::Kind::Gpio {
-                    cli.printf(format_args!("{:?}: {:?}\n", dev, di.status));
+            match args {
+                [ "list" ] => {
+                    devmgr.foreach_dev(|dev| {
+                        if let Some(gpio) = dev.as_any().downcast_ref::<&dyn Gpio>() {
+                            cli.printf(format_args!("{:?} {}\n", dev, gpio.get()));
+                        }
+                    });
+                    rv = Rv::Ok
+                },
+                _ => {
+                    cli.printf(format_args!("unknown command\n"));
                 }
-            });
-            Rv::Ok
+            }
+
+            rv
         });
 
         mgr

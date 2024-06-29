@@ -1,6 +1,7 @@
 
 
 use std::fmt;
+use std::any::Any;
 use std::sync::{Mutex};
 use super::super::Dev;
 use super::Gpio;
@@ -33,6 +34,10 @@ impl Dev for Dummy {
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "dummy@{}", self.pin)
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 
@@ -41,6 +46,10 @@ impl Gpio for Dummy {
         *self.state.lock().unwrap() = state;
         println!("Set pin {} to {}", self.pin, state);
         Rv::Ok
+    }
+
+    fn get(&self) -> bool {
+        *self.state.lock().unwrap()
     }
 }
 

@@ -3,6 +3,7 @@ use std::thread;
 use std::sync::Mutex;
 use std::sync::mpsc::SyncSender;
 use std::fmt;
+use std::any::Any;
 
 use crate::bms::evq::Event;
 use crate::bms::evq::Evq;
@@ -90,6 +91,10 @@ impl Dev for Linux {
     
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "linux@{}", self.path)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

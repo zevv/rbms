@@ -6,7 +6,7 @@ use crate::bms::log;
 struct Handler {
     cmd: &'static str,
     usage: &'static str,
-    cb: Box<dyn Fn(&Cli, &str) -> Rv>,
+    cb: Box<dyn Fn(&Cli, &[&str]) -> Rv>,
 }
 
 struct MgrState {
@@ -45,7 +45,7 @@ impl Mgr {
 
     pub fn reg<F>(&self, cmd: &'static str, usage: &'static str, cb: F)
     where
-        F: Fn(&Cli, &str) -> Rv + 'static,
+        F: Fn(&Cli, &[&str]) -> Rv + 'static,
     {
         self.state.borrow_mut().handlers.push(Handler {
             cmd: cmd,
@@ -68,11 +68,11 @@ impl Mgr {
         }));
     }
 
-    pub fn handle_line(&self, cli: &Cli, parts: &[&str], _n: usize) {
+    pub fn handle_line(&self, cli: &Cli, parts: &[&str]) {
         let mut rv = Rv::ErrInval;
         for h in self.state.borrow().handlers.iter() {
             if h.cmd == parts[0] {
-                rv = (h.cb)(cli, parts[0]);
+                rv = (h.cb)(cli, &parts[1..]);
                 break;
             }
         }
@@ -145,7 +145,7 @@ impl Cli {
         if line.len() > 0 {
             let mut parts = [""; 8];
             let n = self.split(line, &mut parts);
-            self.mgr.handle_line(self, &parts, n);
+            self.mgr.handle_line(self, &parts[0..n]);
         }
         self.print("> ");
     }
