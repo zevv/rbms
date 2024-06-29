@@ -69,6 +69,15 @@ impl Mgr {
             di.status = di.dev.init();
         }
     }
+
+    pub fn foreach_dev<F>(&self, f: F)
+    where
+        F: Fn(&'static dyn Dev),
+    {
+        for di in self.devs.borrow().iter() {
+            f(di.dev);
+        }
+    }
 }
 
 impl fmt::Debug for (dyn Dev + Sync) {

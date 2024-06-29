@@ -7,11 +7,11 @@ pub mod plat;
 pub mod rv;
 
 
-
 pub fn bms() {
     let climgr = cli::Mgr::new();
     let evq = evq::Evq::new(climgr);
     let devmgr = dev::Mgr::new(climgr);
+    let _gpiomgr = dev::gpio::Mgr::new(climgr, devmgr);
 
     #[cfg(feature = "linux")]
     let plat: &'static dyn plat::Plat = plat::linux::new(evq, devmgr, climgr);
