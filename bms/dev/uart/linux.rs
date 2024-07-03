@@ -3,7 +3,6 @@ use std::thread;
 use std::sync::Mutex;
 use std::sync::mpsc::SyncSender;
 use std::fmt;
-use std::any::Any;
 
 use crate::bms::evq::Event;
 use crate::bms::evq::Evq;
@@ -25,27 +24,28 @@ struct Dd {
     stats: Stats,
 }
 
-struct Linux {
+pub struct Linux {
     path: &'static str,
     sender: SyncSender<Event>,
     dd: Mutex<Dd>,
 }
 
 
-pub fn new(evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
-    return Box::leak(Box::new(Linux {
-        path: path,
-        sender: evq.sender(),
-        dd: Mutex::new(Dd {
-            fd: -1,
-            stats: Stats {
-                bytes_rx: 0,
-                bytes_tx: 0,
-            },
-        }),
-    }));
+impl Linux {
+    pub fn new(evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
+        return Box::leak(Box::new(Linux {
+            path: path,
+            sender: evq.sender(),
+            dd: Mutex::new(Dd {
+                fd: -1,
+                stats: Stats {
+                    bytes_rx: 0,
+                    bytes_tx: 0,
+                },
+            }),
+        }));
+    }
 }
-
 
 impl Dev for Linux {
 
@@ -93,10 +93,11 @@ impl Dev for Linux {
         write!(f, "linux@{}", self.path)
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
+    fn as_uart(&self) -> Option<&dyn Uart> {
+        Some(self)
     }
 }
+
 
 impl Uart for Linux {
 

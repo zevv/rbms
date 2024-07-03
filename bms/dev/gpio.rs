@@ -37,7 +37,7 @@ impl Mgr {
             match args {
                 [ "list" ] => {
                     devmgr.foreach_dev(|dev| {
-                        if let Some(gpio) = dev.as_any().downcast_ref::<&dyn Gpio>() {
+                        if let Some(gpio) = dev.as_gpio() {
                             cli.printf(format_args!("{:?} {}\n", dev, gpio.get()));
                         }
                     });

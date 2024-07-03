@@ -6,7 +6,6 @@ use crate::bms::rv::Rv;
 use crate::bms::log;
 use std::cell::RefCell;
 use std::fmt;
-use std::any::Any;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -15,15 +14,17 @@ pub enum Kind {
     Uart,
 }
 
-pub trait Dev: Any {
+pub trait Dev {
     fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
-    fn as_any(&self) -> &dyn Any;
 
     fn eq(&self, dev: &'static dyn Dev) -> bool {
         return std::ptr::addr_eq(self, dev);
     }
+
+    fn as_gpio(&self) -> Option<&dyn gpio::Gpio> { None }
+    fn as_uart(&self) -> Option<&dyn uart::Uart> { None }
 }
 
 

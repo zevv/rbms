@@ -1,7 +1,6 @@
 
 
 use std::fmt;
-use std::any::Any;
 use std::sync::{Mutex};
 use super::super::Dev;
 use super::Gpio;
@@ -35,8 +34,8 @@ impl Dev for Dummy {
         write!(f, "dummy@{}", self.pin)
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
+    fn as_gpio(&self) -> Option<&dyn Gpio> {
+        Some(self)
     }
 }
 
@@ -51,5 +50,6 @@ impl Gpio for Dummy {
     fn get(&self) -> bool {
         *self.state.lock().unwrap()
     }
+    
 }
 

@@ -36,14 +36,12 @@ impl Plat for Linux {
     }
 }
 
-pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr, climgr: &'static cli::Mgr) -> &'static dyn Plat {
-
-    let uart0 = dev::uart::linux::new(evq, "/dev/stdout");
-
-    let cli = climgr.add_cli(|c| {
-        let buf = [c as u8];
-        uart0.write(&buf);
-    });
+pub fn new(
+    evq: &'static evq::Evq,
+    devmgr: &'static dev::Mgr,
+    climgr: &'static cli::Mgr,
+) -> &'static dyn Plat {
+    let uart0 = dev::uart::linux::Linux::new(evq, "/dev/stdout");
 
     let plat = Box::leak(Box::new(Linux {
         evq: evq,
@@ -57,6 +55,11 @@ pub fn new(evq: &'static evq::Evq, devmgr: &'static dev::Mgr, climgr: &'static c
         },
         climgr: climgr,
     }));
+
+    let cli = climgr.add_cli(|c| {
+        let buf = [c as u8];
+        uart0.write(&buf);
+    });
 
     devmgr.add(plat.devs.gpio.backlight);
     devmgr.add(plat.devs.gpio.charge);
