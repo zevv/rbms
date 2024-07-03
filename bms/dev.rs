@@ -7,7 +7,7 @@ use crate::bms::log;
 use std::cell::RefCell;
 use std::fmt;
 
-#[derive(PartialEq)]
+#[derive(PartialEq,Copy,Clone,Debug)]
 pub enum Kind {
     Gpio,
     Uart,
@@ -22,17 +22,23 @@ impl fmt::Display for Kind {
     }
 }
 
+pub struct Base {
+    kind: Kind,
+    name: &'static str,
+}
+
 pub trait Dev {
     fn init(&'static self) -> Rv;
-    fn kind(&self) -> Kind;
-    fn get_name(&self) -> &str;
+    fn base(&self) -> &Base;
+    fn kind(&self) -> Kind { self.base().kind }
+    fn name(&self) -> &str { self.base().name }
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
+    fn as_dev(&self) -> &(dyn Dev + Sync);
 
     fn eq(&self, dev: &'static dyn Dev) -> bool {
         return std::ptr::addr_eq(self, dev);
     }
 
-    fn as_dev(&self) -> &(dyn Dev + Sync);
     fn as_gpio(&self) -> Option<&dyn gpio::Gpio> { None }
     fn as_uart(&self) -> Option<&dyn uart::Uart> { None }
 }
@@ -58,7 +64,7 @@ impl Mgr {
                 cli.printf(format_args!(
                     "- {} {} ({}) {}\n",
                     di.dev.kind(),
-                    di.dev.get_name(),
+                    di.dev.name(),
                     di.dev,
                     di.status
                 ));
@@ -97,7 +103,7 @@ impl Mgr {
 
     pub fn find_by_name(&self, name: &str) -> Option<&'static (dyn Dev + Sync)> {
         for di in self.devs.borrow().iter() {
-            if di.dev.get_name() == name {
+            if di.dev.name() == name {
                 return Some(di.dev);
             }
         }
@@ -110,3 +116,4 @@ impl fmt::Display for (dyn Dev + Sync) {
         return self.display(f);
     }
 }
+

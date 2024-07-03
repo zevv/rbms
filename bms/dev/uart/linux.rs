@@ -1,15 +1,15 @@
-
-use std::thread;
-use std::sync::Mutex;
-use std::sync::mpsc::SyncSender;
 use std::fmt;
+use std::sync::mpsc::SyncSender;
+use std::sync::Mutex;
+use std::thread;
 
+use super::super::Dev;
+use super::Stats;
+use super::Uart;
+use crate::bms::dev;
 use crate::bms::evq::Event;
 use crate::bms::evq::Evq;
 use crate::bms::rv::Rv;
-use super::Uart;
-use super::Stats;
-use super::super::Dev;
 
 extern "C" {
     fn open(path: *const i8, flags: i32, mode: i32) -> i32;
@@ -25,17 +25,19 @@ struct Dd {
 }
 
 pub struct Linux {
-    name: &'static str,
+    base: dev::Base,
     path: &'static str,
     sender: SyncSender<Event>,
     dd: Mutex<Dd>,
 }
 
-
 impl Linux {
     pub fn new(name: &'static str, evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
         return Box::leak(Box::new(Linux {
-            name: name,
+            base: dev::Base {
+                kind: super::Kind::Uart,
+                name: name,
+            },
             path: path,
             sender: evq.sender(),
             dd: Mutex::new(Dd {
@@ -50,27 +52,21 @@ impl Linux {
 }
 
 impl Dev for Linux {
-
     fn init(&'static self) -> Rv {
-
         let path = std::ffi::CString::new(self.path).unwrap();
-        let fd = unsafe {
-            open(path.as_ptr(), O_RDWR, 0)
-        };
+        let fd = unsafe { open(path.as_ptr(), O_RDWR, 0) };
 
         // Spawn a thread to read from the uart
         thread::spawn(move || {
             loop {
                 // Read one chunk of data and send it to the event queue
                 let mut data: [u8; 8] = [0; 8];
-                let len = unsafe {
-                    read(fd, data.as_mut_ptr(), 8)
-                };
+                let len = unsafe { read(fd, data.as_mut_ptr(), 8) };
                 if len > 0 {
-                    let ev = Event::Uart { 
+                    let ev = Event::Uart {
                         dev: self,
                         data: data,
-                        len: len as u8
+                        len: len as u8,
                     };
                     self.sender.send(ev).unwrap();
 
@@ -87,14 +83,10 @@ impl Dev for Linux {
         Rv::Ok
     }
 
-    fn kind(&self) -> super::Kind {
-        return super::Kind::Uart;
+    fn base(&self) -> &dev::Base {
+        &self.base
     }
 
-    fn get_name(&self) -> &str {
-        self.name
-    }
-    
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "linux@{}", self.path)
     }
@@ -108,15 +100,11 @@ impl Dev for Linux {
     }
 }
 
-
 impl Uart for Linux {
-
     // Write data to the uart
     fn write(&self, data: &[u8]) {
         let fd = self.dd.lock().unwrap().fd;
-        let n = unsafe {
-            write(fd, data.as_ptr(), data.len())
-        };
+        let n = unsafe { write(fd, data.as_ptr(), data.len()) };
         if n >= 0 {
             self.dd.lock().unwrap().stats.bytes_tx += n as u32;
         }
@@ -126,7 +114,4 @@ impl Uart for Linux {
         let dd = self.dd.lock().unwrap();
         return dd.stats;
     }
-
 }
-
-

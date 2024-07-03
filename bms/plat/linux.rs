@@ -36,13 +36,11 @@ impl Plat for Linux {
     }
 }
 
-
 pub fn new(
     evq: &'static evq::Evq,
     devmgr: &'static dev::Mgr,
     climgr: &'static cli::Mgr,
 ) -> &'static dyn Plat {
-    let uart0 = dev::uart::linux::Linux::new("uart0", evq, "/dev/stdout");
 
     let plat = Box::leak(Box::new(Linux {
         evq: evq,
@@ -53,7 +51,7 @@ pub fn new(
                 discharge: devmgr.add(dev::gpio::dummy::new("discharge", evq, 5)),
             },
             uart: plat::Uart {
-                uart0: devmgr.add(uart0),
+                uart0: devmgr.add(dev::uart::linux::Linux::new("uart0", evq, "/dev/stdout")),
             },
         },
         climgr: climgr,
@@ -61,12 +59,12 @@ pub fn new(
 
     let cli = climgr.add_cli(|c| {
         let buf = [c as u8];
-        uart0.write(&buf);
+        plat.devs.uart.uart0.write(&buf);
     });
 
     evq.reg("plat", |e| match e {
         Event::Uart { dev, data, len } => {
-            if dev.eq(uart0) {
+            if dev.eq(plat.devs.uart.uart0) {
                 for i in 0..(*len as usize) {
                     cli.handle_char(data[i]);
                 }

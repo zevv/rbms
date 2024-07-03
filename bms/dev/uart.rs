@@ -20,10 +20,3 @@ pub trait Uart : Dev {
 }
 
 
-//impl fmt::Debug for dyn Uart + Send + Sync {
-//    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//        return self.display(f)
-//    }
-//}
-
-

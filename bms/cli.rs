@@ -1,7 +1,7 @@
-use std::io::Write;
-use std::cell::RefCell;
-use crate::bms::rv::Rv;
 use crate::bms::log;
+use crate::bms::rv::Rv;
+use std::cell::RefCell;
+use std::io::Write;
 
 struct Handler {
     cmd: &'static str,
@@ -20,7 +20,6 @@ pub struct Mgr {
 #[macro_export]
 macro_rules! ff { ($($arg:tt)*) => (format_args!($($arg)*)); }
 pub(crate) use ff;
-
 
 impl Mgr {
     pub fn new() -> &'static Mgr {
@@ -70,14 +69,16 @@ impl Mgr {
 
     pub fn handle_line(&self, cli: &Cli, parts: &[&str]) {
         let mut rv = Rv::ErrInval;
-        for h in self.state.borrow().handlers.iter() {
-            if h.cmd == parts[0] {
-                rv = (h.cb)(cli, &parts[1..]);
-                break;
+        if parts.len() > 0 {
+            for h in self.state.borrow().handlers.iter() {
+                if h.cmd == parts[0] {
+                    rv = (h.cb)(cli, &parts[1..]);
+                    break;
+                }
             }
-        }
-        if rv != Rv::Ok {
-            cli.printf(format_args!(": {:?}\n", rv));
+            if rv != Rv::Ok {
+                cli.printf(format_args!(": {:?}\n", rv));
+            }
         }
     }
 }
@@ -94,6 +95,7 @@ pub struct Cli {
 }
 
 impl Cli {
+
     pub fn handle_char(&self, c: u8) {
         match c as char {
             '\n' | '\r' => {
@@ -172,6 +174,4 @@ impl Cli {
         let line = &linebuf[..n];
         self.write(line);
     }
-
 }
-
