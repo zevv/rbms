@@ -25,6 +25,7 @@ impl fmt::Display for Kind {
 pub trait Dev {
     fn init(&'static self) -> Rv;
     fn kind(&self) -> Kind;
+    fn get_name(&self) -> &str;
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result;
 
     fn eq(&self, dev: &'static dyn Dev) -> bool {
@@ -39,7 +40,6 @@ pub trait Dev {
 
 struct DevInfo {
     dev: &'static (dyn Dev + Sync),
-    name: &'static str,
     status: Rv,
 }
 
@@ -56,9 +56,9 @@ impl Mgr {
         climgr.reg("dev", "show devices", |cli, _args| {
             for di in devmgr.devs.borrow().iter() {
                 cli.printf(format_args!(
-                    "- {:-6}: {:-20} ({}): {}\n",
+                    "- {} {} ({}) {}\n",
                     di.dev.kind(),
-                    di.name,
+                    di.dev.get_name(),
                     di.dev,
                     di.status
                 ));
@@ -69,11 +69,10 @@ impl Mgr {
         devmgr
     }
     
-    pub fn add<T>(&self, name: &'static str, dev: &'static T) -> &'static T 
+    pub fn add<T>(&self, dev: &'static T) -> &'static T 
         where T: Dev + Sync + ?Sized
     {
         self.devs.borrow_mut().push(DevInfo {
-            name: name,
             dev: dev.as_dev(),
             status: Rv::ErrNotReady,
         });
@@ -98,7 +97,7 @@ impl Mgr {
 
     pub fn find_by_name(&self, name: &str) -> Option<&'static (dyn Dev + Sync)> {
         for di in self.devs.borrow().iter() {
-            if di.name == name {
+            if di.dev.get_name() == name {
                 return Some(di.dev);
             }
         }

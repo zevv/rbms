@@ -90,6 +90,10 @@ impl Dev for Linux {
     fn kind(&self) -> super::Kind {
         return super::Kind::Uart;
     }
+
+    fn get_name(&self) -> &str {
+        self.name
+    }
     
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "linux@{}", self.path)

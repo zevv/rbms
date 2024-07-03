@@ -14,7 +14,7 @@ struct Dummy {
     state: Mutex<bool>,
 }
 
-pub fn new(_: &Evq, name: &'static str, pin: u8) -> &'static (dyn Gpio + Sync) {
+pub fn new(name: &'static str, _: &Evq, pin: u8) -> &'static (dyn Gpio + Sync) {
     return Box::leak(Box::new(Dummy {
         name: name,
         pin: pin,
@@ -30,6 +30,10 @@ impl Dev for Dummy {
 
     fn kind(&self) -> Kind {
         return Kind::Gpio;
+    }
+
+    fn get_name(&self) -> &str {
+        self.name
     }
     
     fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
