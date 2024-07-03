@@ -7,11 +7,19 @@ use crate::bms::log;
 use std::cell::RefCell;
 use std::fmt;
 
-#[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Kind {
     Gpio,
     Uart,
+}
+
+impl fmt::Display for Kind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Kind::Gpio => write!(f, "gpio"),
+            Kind::Uart => write!(f, "uart"),
+        }
+    }
 }
 
 pub trait Dev {
@@ -31,6 +39,7 @@ pub trait Dev {
 
 struct DevInfo {
     dev: &'static (dyn Dev + Sync),
+    name: &'static str,
     status: Rv,
 }
 
@@ -45,11 +54,11 @@ impl Mgr {
         }));
 
         climgr.reg("dev", "show devices", |cli, _args| {
-            cli.print("devices:");
             for di in devmgr.devs.borrow().iter() {
                 cli.printf(format_args!(
-                    "- {:?}: {:?}: {:?}\n",
+                    "- {:-6}: {:-20} ({}): {}\n",
                     di.dev.kind(),
+                    di.name,
                     di.dev,
                     di.status
                 ));
@@ -60,10 +69,11 @@ impl Mgr {
         devmgr
     }
     
-    pub fn add<T>(&self, dev: &'static T) -> &'static T 
+    pub fn add<T>(&self, name: &'static str, dev: &'static T) -> &'static T 
         where T: Dev + Sync + ?Sized
     {
         self.devs.borrow_mut().push(DevInfo {
+            name: name,
             dev: dev.as_dev(),
             status: Rv::ErrNotReady,
         });
@@ -73,7 +83,6 @@ impl Mgr {
     pub fn init(&self) {
         log::inf!("devmgr init");
         for di in self.devs.borrow_mut().iter_mut() {
-            println!("init {:?}", di.dev);
             di.status = di.dev.init();
         }
     }
@@ -86,9 +95,18 @@ impl Mgr {
             f(di.dev);
         }
     }
+
+    pub fn find_by_name(&self, name: &str) -> Option<&'static (dyn Dev + Sync)> {
+        for di in self.devs.borrow().iter() {
+            if di.name == name {
+                return Some(di.dev);
+            }
+        }
+        return None;
+    }
 }
 
-impl fmt::Debug for (dyn Dev + Sync) {
+impl fmt::Display for (dyn Dev + Sync) {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         return self.display(f);
     }

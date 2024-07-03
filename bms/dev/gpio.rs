@@ -3,6 +3,7 @@ pub mod dummy;
 
 use crate::bms::cli;
 use crate::bms::dev;
+use crate::bms::log;
 
 #[cfg(feature = "esp32")]
 pub mod esp32;
@@ -30,25 +31,27 @@ impl Mgr {
             climgr: climgr,
         }));
 
-        climgr.reg("gpio", "", |cli, args| {
-        
-            let mut rv = Rv::ErrInval;
-
+        climgr.reg("gpio", "l[ist] | s[et] <name> <0|1>", |cli, args| {
             match args {
                 [ "list" | "l" ] => {
                     devmgr.foreach_dev(|dev| {
                         if let Some(gpio) = dev.as_gpio() {
-                            cli.printf(format_args!("{:?} {}\n", dev, gpio.get()));
+                            cli.printf(format_args!("{} {}\n", dev, gpio.get()));
                         }
                     });
-                    rv = Rv::Ok
+                    Rv::Ok
+                },
+                [ "set" | "s", name, state ] => {
+                    if let Some(dev) = devmgr.find_by_name(name) {
+                        log::tst!("found dev");
+                    }
+                    Rv::Ok
                 },
                 _ => {
                     cli.printf(format_args!("unknown command\n"));
+                    Rv::ErrInval
                 }
             }
-
-            rv
         });
 
         mgr

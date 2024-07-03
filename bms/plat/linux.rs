@@ -36,6 +36,7 @@ impl Plat for Linux {
     }
 }
 
+
 pub fn new(
     evq: &'static evq::Evq,
     devmgr: &'static dev::Mgr,
@@ -47,12 +48,12 @@ pub fn new(
         evq: evq,
         devs: plat::Devices {
             gpio: plat::Gpio {
-                backlight: devmgr.add(dev::gpio::dummy::new(evq, 13)),
-                charge: devmgr.add(dev::gpio::dummy::new(evq, 28)),
-                discharge: devmgr.add(dev::gpio::dummy::new(evq, 5)),
+                backlight: devmgr.add("backlight", dev::gpio::dummy::new(evq, 13)),
+                charge: devmgr.add("charge", dev::gpio::dummy::new(evq, 28)),
+                discharge: devmgr.add("discharge", dev::gpio::dummy::new(evq, 5)),
             },
             uart: plat::Uart {
-                uart0: devmgr.add(uart0),
+                uart0: devmgr.add("uart0", uart0),
             },
         },
         climgr: climgr,

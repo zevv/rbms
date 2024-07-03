@@ -120,10 +120,13 @@ macro_rules! inf { ($($arg:tt)*) => (log::logf(log::Level::Inf, module_path!(), 
 macro_rules! wrn { ($($arg:tt)*) => (log::logf(log::Level::Wrn, module_path!(), format_args!($($arg)*))); }
 #[macro_export]
 macro_rules! err { ($($arg:tt)*) => (log::logf(log::Level::Err, module_path!(), format_args!($($arg)*))); }
+#[macro_export]
+macro_rules! tst { ($($arg:tt)*) => (log::logf(log::Level::Tst, module_path!(), format_args!($($arg)*))); }
 
 pub(crate) use dmp;
 pub(crate) use dbg;
 pub(crate) use inf;
 pub(crate) use wrn;
 pub(crate) use err;
+pub(crate) use tst;
 

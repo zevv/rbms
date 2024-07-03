@@ -37,7 +37,7 @@ pub fn bms() {
 
     evq.reg_filter("test", evq::EvType::Tick1Hz, move |ev| {
         //log::inf!("tick1hz");
-        plat.devs().gpio.backlight.set(true);
+        //plat.devs().gpio.backlight.set(true);
     });
 
 

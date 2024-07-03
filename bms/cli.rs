@@ -76,7 +76,9 @@ impl Mgr {
                 break;
             }
         }
-        cli.printf(format_args!(": {:?}\n", rv));
+        if rv != Rv::Ok {
+            cli.printf(format_args!(": {:?}\n", rv));
+        }
     }
 }
 
