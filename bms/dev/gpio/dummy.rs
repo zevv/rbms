@@ -9,12 +9,14 @@ use crate::bms::evq::Evq;
 use crate::bms::rv::Rv;
 
 struct Dummy {
+    name: &'static str,
     pin: u8,
     state: Mutex<bool>,
 }
 
-pub fn new(_: &Evq, pin: u8) -> &'static (dyn Gpio + Sync) {
+pub fn new(_: &Evq, name: &'static str, pin: u8) -> &'static (dyn Gpio + Sync) {
     return Box::leak(Box::new(Dummy {
+        name: name,
         pin: pin,
         state: Mutex::new(false),
     }));

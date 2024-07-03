@@ -42,18 +42,18 @@ pub fn new(
     devmgr: &'static dev::Mgr,
     climgr: &'static cli::Mgr,
 ) -> &'static dyn Plat {
-    let uart0 = dev::uart::linux::Linux::new(evq, "/dev/stdout");
+    let uart0 = dev::uart::linux::Linux::new("uart0", evq, "/dev/stdout");
 
     let plat = Box::leak(Box::new(Linux {
         evq: evq,
         devs: plat::Devices {
             gpio: plat::Gpio {
-                backlight: devmgr.add("backlight", dev::gpio::dummy::new(evq, 13)),
-                charge: devmgr.add("charge", dev::gpio::dummy::new(evq, 28)),
-                discharge: devmgr.add("discharge", dev::gpio::dummy::new(evq, 5)),
+                backlight: devmgr.add(dev::gpio::dummy::new("backlight", evq, 13)),
+                charge: devmgr.add(dev::gpio::dummy::new("charge", evq, 28)),
+                discharge: devmgr.add(dev::gpio::dummy::new("discharge", evq, 5)),
             },
             uart: plat::Uart {
-                uart0: devmgr.add("uart0", uart0),
+                uart0: devmgr.add(uart0),
             },
         },
         climgr: climgr,

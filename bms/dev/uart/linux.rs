@@ -25,6 +25,7 @@ struct Dd {
 }
 
 pub struct Linux {
+    name: &'static str,
     path: &'static str,
     sender: SyncSender<Event>,
     dd: Mutex<Dd>,
@@ -32,8 +33,9 @@ pub struct Linux {
 
 
 impl Linux {
-    pub fn new(evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
+    pub fn new(name: &'static str, evq: &Evq, path: &'static str) -> &'static (dyn Uart + Sync) {
         return Box::leak(Box::new(Linux {
+            name: name,
             path: path,
             sender: evq.sender(),
             dd: Mutex::new(Dd {
