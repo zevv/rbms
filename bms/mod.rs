@@ -19,7 +19,9 @@ pub fn bms() {
     #[cfg(feature = "nowos")]
     let plat: &'static dyn plat::Plat = plat::nowos::new(evq, devmgr, climgr);
 
-    log::set_console(plat.console());
+    if let Some(c) = plat.console() {
+        log::set_console(c);
+    }
 
     plat.climgr().reg("quit", "bye bye", |_cli, _args| {
         evq.stop();
@@ -35,7 +37,7 @@ pub fn bms() {
 
     plat.devs().gpio.backlight.set(true);
 
-    evq.reg_filter("test", evq::EvType::Tick1Hz, move |ev| {
+    evq.reg_filter("test", evq::EvType::Tick1Hz, move |_ev| {
         //log::inf!("tick1hz");
         //plat.devs().gpio.backlight.set(true);
     });

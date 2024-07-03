@@ -35,8 +35,8 @@ impl Mgr {
                     });
                     Rv::Ok
                 }
-                ["set" | "s", name, state] => {
-                    if let Some(dev) = devmgr.find_by_name(name) {
+                ["set" | "s", name, _state] => {
+                    if let Some(_dev) = devmgr.find_by_name(name) {
                         log::tst!("found dev");
                     }
                     Rv::Ok

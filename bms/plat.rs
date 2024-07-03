@@ -21,14 +21,21 @@ pub struct Uart {
 pub struct Devices {
     pub gpio: Gpio,
     pub uart: Uart,
+}
 
+pub struct Base {
+    evq: &'static crate::bms::evq::Evq,
+    climgr: &'static crate::bms::cli::Mgr,
+    console: Option<&'static (dyn dev::uart::Uart + Sync)>,
+    devs: Devices,
 }
 
 pub trait Plat {
     fn init(&self) -> Rv;
-    fn devs(&self) -> &Devices;
-    fn climgr(&self) -> &crate::bms::cli::Mgr;
-    fn console(&self) -> &'static (dyn dev::uart::Uart + Sync);
+    fn base(&self) -> &Base;
+    fn devs(&self) -> &Devices { &self.base().devs }
+    fn climgr(&self) -> &crate::bms::cli::Mgr { self.base().climgr }
+    fn console(&self) -> Option<&'static (dyn dev::uart::Uart + Sync)> { self.base().console }
 }
 
 
