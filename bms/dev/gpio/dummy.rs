@@ -34,6 +34,10 @@ impl Dev for Dummy {
         write!(f, "dummy@{}", self.pin)
     }
 
+    fn as_dev(&self) -> &(dyn Dev + Sync) {
+        self
+    }
+
     fn as_gpio(&self) -> Option<&dyn Gpio> {
         Some(self)
     }

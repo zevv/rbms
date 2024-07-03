@@ -23,6 +23,7 @@ pub trait Dev {
         return std::ptr::addr_eq(self, dev);
     }
 
+    fn as_dev(&self) -> &(dyn Dev + Sync);
     fn as_gpio(&self) -> Option<&dyn gpio::Gpio> { None }
     fn as_uart(&self) -> Option<&dyn uart::Uart> { None }
 }
@@ -58,10 +59,12 @@ impl Mgr {
 
         devmgr
     }
-
-    pub fn add(&self, dev: &'static (dyn Dev + Sync)) -> &'static dyn Dev {
+    
+    pub fn add<T>(&self, dev: &'static T) -> &'static T 
+        where T: Dev + Sync + ?Sized
+    {
         self.devs.borrow_mut().push(DevInfo {
-            dev: dev,
+            dev: dev.as_dev(),
             status: Rv::ErrNotReady,
         });
         return dev;

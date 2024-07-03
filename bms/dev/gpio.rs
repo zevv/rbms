@@ -35,7 +35,7 @@ impl Mgr {
             let mut rv = Rv::ErrInval;
 
             match args {
-                [ "list" ] => {
+                [ "list" | "l" ] => {
                     devmgr.foreach_dev(|dev| {
                         if let Some(gpio) = dev.as_gpio() {
                             cli.printf(format_args!("{:?} {}\n", dev, gpio.get()));

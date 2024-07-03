@@ -93,6 +93,10 @@ impl Dev for Linux {
         write!(f, "linux@{}", self.path)
     }
 
+    fn as_dev(&self) -> &(dyn Dev + Sync) {
+        self
+    }
+
     fn as_uart(&self) -> Option<&dyn Uart> {
         Some(self)
     }

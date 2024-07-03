@@ -47,11 +47,13 @@ pub fn new(
         evq: evq,
         devs: plat::Devices {
             gpio: plat::Gpio {
-                backlight: dev::gpio::dummy::new(evq, 13),
-                charge: dev::gpio::dummy::new(evq, 28),
-                discharge: dev::gpio::dummy::new(evq, 5),
+                backlight: devmgr.add(dev::gpio::dummy::new(evq, 13)),
+                charge: devmgr.add(dev::gpio::dummy::new(evq, 28)),
+                discharge: devmgr.add(dev::gpio::dummy::new(evq, 5)),
             },
-            uart: plat::Uart { uart0: uart0 },
+            uart: plat::Uart {
+                uart0: devmgr.add(uart0),
+            },
         },
         climgr: climgr,
     }));
@@ -60,11 +62,6 @@ pub fn new(
         let buf = [c as u8];
         uart0.write(&buf);
     });
-
-    devmgr.add(plat.devs.gpio.backlight);
-    devmgr.add(plat.devs.gpio.charge);
-    devmgr.add(plat.devs.gpio.discharge);
-    devmgr.add(plat.devs.uart.uart0);
 
     evq.reg("plat", |e| match e {
         Event::Uart { dev, data, len } => {
