@@ -78,9 +78,10 @@ impl Dev for Linux {
         unsafe {
             let mut tios: libc::termios = unsafe { std::mem::zeroed() };
             libc::tcgetattr(dd.fd, &mut tios);
-            tios.c_lflag = 0;
+            tios.c_lflag &= !(libc::ECHO);
             tios.c_cc[libc::VMIN] = 1;
             tios.c_cc[libc::VTIME] = 0;
+            libc::tcflush(dd.fd, libc::TCIFLUSH);
             libc::tcsetattr(dd.fd, libc::TCSANOW, &tios);
         }
 

@@ -98,7 +98,7 @@ impl Cli {
 
     pub fn handle_char(&self, c: u8) {
         match c {
-            3 => {
+            4 => {
                 self.print("\n^C\n");
                 unsafe { libc::exit(0); }
             }
