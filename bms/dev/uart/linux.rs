@@ -81,7 +81,7 @@ impl Dev for Linux {
         dd.fd = unsafe { libc::open(path.as_ptr(), O_RDWR, 0) };
 
         unsafe {
-            let mut tios: libc::termios = unsafe { std::mem::zeroed() };
+            let mut tios: libc::termios = std::mem::zeroed();
             libc::tcgetattr(dd.fd, &mut tios);
             tios.c_lflag = 0;
             tios.c_cc[libc::VMIN] = 1;

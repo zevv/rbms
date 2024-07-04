@@ -65,7 +65,7 @@ impl Evq {
         climgr.reg("evq", "show event queue", |_cli, _args| {
             let data = evq.data.borrow();
             for handler in data.handlers.iter() {
-                println!("{} {}", handler.id, handler.count.borrow());
+                println!("{} {} {}", handler.evtype, handler.id, handler.count.borrow());
             }
             Rv::Ok
         });
