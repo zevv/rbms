@@ -2,6 +2,7 @@ use crate::bms::log;
 use crate::bms::rv::Rv;
 use std::cell::RefCell;
 use std::io::Write;
+use libc;
 
 struct Handler {
     cmd: &'static str,
@@ -31,7 +32,6 @@ impl Mgr {
 
         climgr.reg("help", "show help", |cli, _args| {
             for h in cli.mgr.state.borrow().handlers.iter() {
-                //wop!(cli, "{} - {}\n", h.cmd, h.usage);
                 cli.printf(ff!("{} - {}\n", h.cmd, h.usage));
             }
             Rv::Ok
@@ -97,8 +97,19 @@ pub struct Cli {
 impl Cli {
 
     pub fn handle_char(&self, c: u8) {
-        match c as char {
-            '\n' | '\r' => {
+        match c {
+            3 => {
+                self.print("\n^C\n");
+                unsafe { libc::exit(0); }
+            }
+            8 | 127 => {
+                let mut state = self.state.borrow_mut();
+                if state.len > 0 {
+                    state.len -= 1;
+                    self.write("\x08 \x08".as_bytes());
+                }
+            }
+            10 | 13 => {
                 self.write("\r\n".as_bytes());
                 let mut state = self.state.borrow_mut();
                 self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
