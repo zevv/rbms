@@ -53,6 +53,11 @@ impl Linux {
             let mut data: [u8; 8] = [0; 8];
             let len = unsafe { libc::read(fd, data.as_mut_ptr() as *mut libc::c_void, 8) };
             if len > 0 {
+
+                if data[0..len as usize].contains(&0x03) {
+                    unsafe { libc::abort(); }
+                }
+
                 let ev = Event::Uart {
                     dev: self,
                     data: data,
@@ -78,7 +83,7 @@ impl Dev for Linux {
         unsafe {
             let mut tios: libc::termios = unsafe { std::mem::zeroed() };
             libc::tcgetattr(dd.fd, &mut tios);
-            tios.c_lflag &= !(libc::ECHO);
+            tios.c_lflag = 0;
             tios.c_cc[libc::VMIN] = 1;
             tios.c_cc[libc::VTIME] = 0;
             libc::tcflush(dd.fd, libc::TCIFLUSH);

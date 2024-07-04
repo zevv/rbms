@@ -98,10 +98,6 @@ impl Cli {
 
     pub fn handle_char(&self, c: u8) {
         match c {
-            4 => {
-                self.print("\n^C\n");
-                unsafe { libc::exit(0); }
-            }
             8 | 127 => {
                 let mut state = self.state.borrow_mut();
                 if state.len > 0 {
