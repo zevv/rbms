@@ -1,8 +1,8 @@
 use crate::bms::log;
 use crate::bms::rv::Rv;
+use libc;
 use std::cell::RefCell;
 use std::io::Write;
-use libc;
 
 struct Handler {
     cmd: &'static str,
@@ -61,6 +61,8 @@ impl Mgr {
             state: RefCell::new(CliState {
                 buf: [0; 128],
                 len: 0,
+                escape: 0,
+                pos: 0,
             }),
             on_tx: Box::new(on_tx),
             mgr: self,
@@ -86,6 +88,8 @@ impl Mgr {
 struct CliState {
     buf: [u8; 128],
     len: usize,
+    escape: usize,
+    pos: usize,
 }
 
 pub struct Cli {
@@ -95,32 +99,81 @@ pub struct Cli {
 }
 
 impl Cli {
-
     pub fn handle_char(&self, c: u8) {
-        match c {
-            8 | 127 => {
-                let mut state = self.state.borrow_mut();
-                if state.len > 0 {
-                    state.len -= 1;
-                    self.write("\x08 \x08".as_bytes());
+        let mut state = self.state.borrow_mut();
+        match state.escape {
+            0 => match c {
+                1 => {
+                    state.pos = 0;
+                }
+                5 => {
+                    state.pos = state.len;
+                }
+                8 | 127 => {
+                    if state.len > 0 {
+                        state.len -= 1;
+                        self.write("\x08 \x08".as_bytes());
+                    }
+                }
+                27 => {
+                    state.escape = 1;
+                }
+                10 | 13 => {
+                    self.write("\r\n".as_bytes());
+                    self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
+                    state.len = 0;
+                }
+                _ => {
+                    if state.len < state.buf.len() {
+                        let len = state.len;
+                        let pos = state.pos;
+                        for i in (pos..len).rev() {
+                            state.buf[i + 1] = state.buf[i];
+                        }
+                        state.buf[pos] = c;
+                        state.len = len + 1;
+                        state.pos = state.pos + 1;
+                    }
+                }
+            },
+
+            1 => {
+                if c == 91 {
+                    state.escape = 2;
+                } else {
+                    state.escape = 0;
                 }
             }
-            10 | 13 => {
-                self.write("\r\n".as_bytes());
-                let mut state = self.state.borrow_mut();
-                self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
-                state.len = 0;
+
+            2 => {
+                match c {
+                    67 => {
+                        if state.pos < state.len {
+                            state.pos += 1;
+                            self.write("\x1b[C".as_bytes());
+                        }
+                    }
+                    68 => {
+                        if state.pos > 0 {
+                            state.pos -= 1;
+                            self.write("\x1b[D".as_bytes());
+                        }
+                    }
+                    _ => {
+                        state.escape = 0;
+                    }
+                }
+                state.escape = 0;
             }
+
             _ => {
-                self.write(&[c]);
-                let mut state = self.state.borrow_mut();
-                if state.len < state.buf.len() {
-                    let len = state.len;
-                    state.buf[len] = c;
-                    state.len = len + 1;
-                }
+                state.escape = 0;
             }
         }
+        self.write(b"\r\x1b[K");
+        self.write(&state.buf[0..state.len]);
+        self.write(b"\r");
+        self.write(&state.buf[0..state.pos]);
     }
 
     fn split<'a>(&self, line: &'a str, parts: &mut [&'a str; 8]) -> usize {
