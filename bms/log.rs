@@ -94,6 +94,7 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
 
     match data.uart {
         Some(uart) => {
+            uart.write(b"\r");
             uart.write(li.color.as_bytes());
             uart.write(&line);
             uart.write(b"\n\x1b[0m");

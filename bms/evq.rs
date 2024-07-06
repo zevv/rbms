@@ -37,12 +37,12 @@ struct Handler {
 
 struct Data {
     running: bool,
-    handlers: Vec<Handler>,
 }
 
 pub struct Evq {
     rx: Receiver<Event>,
     tx: SyncSender<Event>,
+    handlers: RefCell<Vec<Handler>>,
     data: RefCell<Data>,
 }
 
@@ -56,15 +56,13 @@ impl Evq {
         let evq = Box::leak(Box::new(Evq {
             rx: rx,
             tx: tx,
-            data: RefCell::new(Data {
-                running: true,
-                handlers: Vec::new(),
-            })
+            handlers: RefCell::new(Vec::new()),
+            data: RefCell::new(Data { running: true }),
         }));
 
         climgr.reg("evq", "show event queue", |_cli, _args| {
-            let data = evq.data.borrow();
-            for handler in data.handlers.iter() {
+            let hs = evq.handlers.borrow();
+            for handler in hs.iter() {
                 println!("{} {} {}", handler.evtype, handler.id, handler.count.borrow());
             }
             Rv::Ok
@@ -80,8 +78,7 @@ impl Evq {
 
     pub fn reg_filter<F>(&self, id: &'static str, evtype: EvType, cb: F) 
         where F: Fn(&Event) + 'static {
-        let mut data = self.data.borrow_mut();
-        data.handlers.push(
+        self.handlers.borrow_mut().push(
             Handler {
                 cb: Box::new(cb),
                 id: id,
@@ -95,12 +92,14 @@ impl Evq {
         loop {
             let event = self.rx.recv().unwrap();
             let evtype = unsafe { *<*const _>::from(&event).cast::<u8>() };
-            let data = self.data.borrow();
-            for handler in data.handlers.iter() {
+            for handler in self.handlers.borrow_mut().iter() {
                 if handler.evtype == 0 || handler.evtype == evtype {
                     (handler.cb)(&event);
                     *handler.count.borrow_mut() += 1;
                 }
+            }
+            if self.data.borrow().running == false {
+                break;
             }
         }
     }

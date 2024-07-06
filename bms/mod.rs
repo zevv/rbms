@@ -47,8 +47,8 @@ pub fn bms() {
     //    linf!("filter 2");
     //});
 
-    println!("hooray\n");
-    log::inf!("=== hello ===");
 
+    log::inf!("event loop start");
     evq.run();
+    log::inf!("event loop end");
 }
