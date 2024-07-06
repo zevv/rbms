@@ -104,26 +104,45 @@ impl Cli {
         match state.escape {
             0 => match c {
                 1 => {
+                    // Ctrl-A: move to beginning of line
                     state.pos = 0;
                 }
+                4 => {
+                    // Ctrl-D: delete character under cursor
+                    if state.pos < state.len {
+                        for i in state.pos..state.len {
+                            state.buf[i] = state.buf[i + 1];
+                        }
+                        state.len -= 1;
+                    }
+                }
                 5 => {
+                    // Ctrl-E: move to end of line
                     state.pos = state.len;
                 }
                 8 | 127 => {
-                    if state.len > 0 {
+                    // Backspace
+                    if state.pos > 0 {
+                        state.pos -= 1;
+                        for i in state.pos..state.len {
+                            state.buf[i] = state.buf[i + 1];
+                        }
                         state.len -= 1;
-                        self.write("\x08 \x08".as_bytes());
                     }
                 }
                 27 => {
+                    // Escape
                     state.escape = 1;
                 }
                 10 | 13 => {
+                    // Enter
                     self.write("\r\n".as_bytes());
                     self.handle_line(std::str::from_utf8(&state.buf[0..state.len]).unwrap());
                     state.len = 0;
+                    state.pos = 0;
                 }
                 _ => {
+                    // Insert character at cursor
                     if state.len < state.buf.len() {
                         let len = state.len;
                         let pos = state.pos;
@@ -138,7 +157,7 @@ impl Cli {
             },
 
             1 => {
-                if c == 91 {
+                if c == 91 { // "["
                     state.escape = 2;
                 } else {
                     state.escape = 0;
@@ -147,13 +166,13 @@ impl Cli {
 
             2 => {
                 match c {
-                    67 => {
+                    67 => { // Left arrow
                         if state.pos < state.len {
                             state.pos += 1;
                             self.write("\x1b[C".as_bytes());
                         }
                     }
-                    68 => {
+                    68 => { // Right arrow
                         if state.pos > 0 {
                             state.pos -= 1;
                             self.write("\x1b[D".as_bytes());
@@ -170,10 +189,15 @@ impl Cli {
                 state.escape = 0;
             }
         }
-        self.write(b"\r\x1b[K");
+
+        self.write(b"\r\x1b[1mbms>\x1b[0m ");
         self.write(&state.buf[0..state.len]);
-        self.write(b"\r");
-        self.write(&state.buf[0..state.pos]);
+        self.write(b"\x1b[K");
+        if state.pos < state.len {
+            self.printf(std::format_args!("\x1b[{}D", state.len - state.pos));
+        }
+
+
     }
 
     fn split<'a>(&self, line: &'a str, parts: &mut [&'a str; 8]) -> usize {
