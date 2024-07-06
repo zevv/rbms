@@ -4,6 +4,7 @@ use super::Gpio;
 use crate::bms::dev;
 use crate::bms::evq::Evq;
 use crate::bms::rv::Rv;
+use crate::bms::log;
 use std::fmt;
 use std::sync::Mutex;
 
@@ -53,7 +54,7 @@ impl Dev for Dummy {
 impl Gpio for Dummy {
     fn set(&self, state: bool) -> Rv {
         *self.state.lock().unwrap() = state;
-        println!("Set pin {} to {}", self.pin, state);
+        log::dbg!("Set pin {} to {}", self.pin, state);
         Rv::Ok
     }
 

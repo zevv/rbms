@@ -29,11 +29,11 @@ pub fn bms() {
     });
 
     plat.init();
-    println!("devmgr init");
     devmgr.init();
-    println!("devmgr init2");
+
+    let uart0 = plat.devs().uart.uart0;
+    log::set_console(uart0);
     
-    let _console = plat.devs().uart.uart0;
 
     plat.devs().gpio.backlight.set(true);
 

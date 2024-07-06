@@ -80,10 +80,13 @@ pub fn logf(level: Level, path: &str, args: std::fmt::Arguments) {
 
     // build log message
     slice = fmt_time(slice);
-    let l = path.len() - 8;
-    _ = slice.write(b" ");
-    _ = slice.write(path[l..].as_bytes());
-    _ = write!(slice, " {} {} {}", li.tag, path, args);
+    let l = if path.len() > 10 { path.len() - 10 } else { 0 };
+    slice.write(b" ");
+    slice.write(li.tag.as_bytes());
+    slice.write(b" ");
+    slice.write(path[l..].as_bytes());
+    slice.write(b"> ");
+    slice.write(std::fmt::format(args).as_bytes());
     
     // Create a slice for the written portion of the buffer.
     let n = slice.as_ptr() as usize - linebuf.as_ptr() as usize;

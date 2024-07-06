@@ -39,7 +39,7 @@ pub fn new(
         base: plat::Base {
             evq: evq,
             climgr: climgr,
-            console: Some(uart0),
+            console: None,
             devs: plat::Devices {
                 gpio: plat::Gpio {
                     backlight: devmgr.add(dev::gpio::dummy::new("backlight", evq, 13)),

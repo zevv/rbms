@@ -9,7 +9,6 @@ use crate::bms::rv::Rv;
 
 // TODO there must be a better way
 
-#[repr(u8)]
 pub enum EvType {
     Any = 0,
     Tick1Hz = 1,
@@ -63,7 +62,7 @@ impl Evq {
         climgr.reg("evq", "show event queue", |_cli, _args| {
             let hs = evq.handlers.borrow();
             for handler in hs.iter() {
-                println!("{} {} {}", handler.evtype, handler.id, handler.count.borrow());
+                println!("{:2} {:-20} {}", handler.evtype, handler.id, handler.count.borrow());
             }
             Rv::Ok
         });
@@ -92,7 +91,7 @@ impl Evq {
         loop {
             let event = self.rx.recv().unwrap();
             let evtype = unsafe { *<*const _>::from(&event).cast::<u8>() };
-            for handler in self.handlers.borrow_mut().iter() {
+            for handler in self.handlers.borrow().iter() {
                 if handler.evtype == 0 || handler.evtype == evtype {
                     (handler.cb)(&event);
                     *handler.count.borrow_mut() += 1;
